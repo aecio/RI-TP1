@@ -119,7 +119,7 @@ OccurrenceFile* IndexWriter::merge(list<OccurrenceFile*>& runs) {
 	cout << endl << "Merging " << runs.size() <<" runs..." << endl;
 	
 	if(runs.size() == 1){
-		cout << "Oly one Run. No need to merge." << endl;
+		cout << "Only one Run. No need to merge." << endl;
 		return runs.front();
 	}
 	
@@ -130,14 +130,11 @@ OccurrenceFile* IndexWriter::merge(list<OccurrenceFile*>& runs) {
 	int id = 0;
 	while(runs.size() > 1) {
 		run1 = runs.front();
-//		run1->reopen();
 		runs.pop_front();
 		
 		run2 = runs.front();
-//		run2->reopen();
 		runs.pop_front();
 	
-		
 		stringstream name;
 		name << "temp" << id++;
 		merged = new OccurrenceFile( name.str() );

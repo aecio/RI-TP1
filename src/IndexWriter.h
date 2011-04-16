@@ -15,6 +15,7 @@
 #include <list>
 #include "Term.h"
 #include "Occurrence.h"
+#include "OccurrenceFile.h"
 
 using namespace std;
 	
@@ -25,18 +26,19 @@ class IndexWriter {
 	
 	int docId;
 	int termId;
-	list<Occurrence> occurrences;
-	int occurrencesCount;
 	
-	fstream fout;
+	OccurrenceFile* ofile;
+	unsigned int runSize;
 	
 	string extractTextFrom(string& html);
 	Term& getVocabularyTerm(string t);
 	
-	void write(Occurrence& it);
-	Occurrence read();
-	
+	void printOccurence(Occurrence& it);
 public:
+	list<OccurrenceFile*> createRuns();
+	OccurrenceFile* merge(list<OccurrenceFile*>&);
+	void merge2runs(OccurrenceFile*, OccurrenceFile*, OccurrenceFile*);
+	
 	IndexWriter(string directory);
 	
 	void addDocument(string&);

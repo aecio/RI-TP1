@@ -9,7 +9,6 @@ set (CMAKE_C_FLAGS "-Wall -Werror")
 set (CMAKE_CXX_FLAGS "-Wall -Werror")
 
 ADD_SUBDIRECTORY(src)
-ADD_SUBDIRECTORY(test)
 ADD_SUBDIRECTORY(riCode)
-ADD_SUBDIRECTORY(entities_html)
+ADD_SUBDIRECTORY(test)
 

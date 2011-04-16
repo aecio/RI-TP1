@@ -1,8 +1,9 @@
 # CmakeLists in test dir
 
-# Make sure the compiler can find include from our RICPlib library
 INCLUDE_DIRECTORIES(${TP1_SOURCE_DIR}/src)
+INCLUDE_DIRECTORIES(${TP1_SOURCE_DIR}/riCode)
 
-# Add binary called "ircpReader" that is built from the source file "test.cpp"
-ADD_EXECUTABLE(test test)
+ADD_EXECUTABLE(testSuite TestSuite)
 
+# Link the executable to the RICPlib library
+TARGET_LINK_LIBRARIES(testSuite z htmlcxx RICPlib TP1)

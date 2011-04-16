@@ -4,16 +4,21 @@
  *  Created on: 13/04/2011
  *      Author: aecio
  */
- 
+
+#include <assert.h> 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <map>
+#include <list>
+#include <vector>
 #include <algorithm>
 #include <htmlcxx/html/Node.h>
 #include <htmlcxx/html/ParserDom.h>
 #include "IndexWriter.h"
 #include "TextTokenizer.h"
+#include "OccurrenceFile.h"
 
 using namespace std;
 using namespace htmlcxx;
@@ -21,9 +26,9 @@ using namespace htmlcxx;
 IndexWriter::IndexWriter(string directory_){
 	docId = 0;
 	termId = 0;
-	occurrencesCount = 0;
+	runSize = 200000;
 	directory = directory_;
-	fout.open("triplas.txt");
+	ofile = new OccurrenceFile("occurrences");
 }
 	
 string IndexWriter::extractTextFrom(string& html){
@@ -54,7 +59,6 @@ Term& IndexWriter::getVocabularyTerm(string t) {
 }
 
 void IndexWriter::addDocument(string& html){
-	
 	string text = extractTextFrom(html);
 	TextTokenizer tokenizer(text);
 	map<string, int> docFrequencies;
@@ -71,52 +75,129 @@ void IndexWriter::addDocument(string& html){
 		Term& term = getVocabularyTerm(t);
 		
 		Occurrence oc(term.getId(), docId, it->second);
-		write(oc);
-		occurrencesCount++;
-		
-//		occurrences.push_back(  );
+		ofile->write(oc);
 	}
-}
-
-void IndexWriter::write(Occurrence& it){
-	fout.write((char *) &it, sizeof(Occurrence)); // grava no arquivo
-}
-
-Occurrence IndexWriter::read(){
-	Occurrence oc;
-	fout.read((char*) &oc, sizeof(Occurrence)); // lê do arquivo
-	return oc;
 }
 
 void IndexWriter::commit() {
-	//finalizar criação do índice no disco
-	cout << "Reading occurrences file..." << endl;
-	occurrences.clear();
-	fout.seekg(0, ios::beg);
-	for(int i=0; i<occurrencesCount; i++){
-		Occurrence it = read();
-		occurrences.push_back(it);
-	}
 	
-	cout << "Ordering..." << endl;
-	occurrences.sort();
+	list<OccurrenceFile*> runs = createRuns();
+	OccurrenceFile* occurrencesSorted = merge(runs);
 	
-	cout << "Flushing occurrences to disk..." << endl;
-	fout.seekp(0, ios::beg);
-	list<Occurrence>::iterator it = occurrences.begin();
-	for(; it != occurrences.end(); it++){
-		write(*it);
-	}
-	cout << "Done." << endl;
+	ofile->close();
+	occurrencesSorted->close();
 
+	cout << "Created sorted occurrences file... Done." << endl;
 }
 
-//void IndexWriter::printOccurence(Occurrence& it){
-//		cout << it.termId;
-//		cout << ' ';
-//		cout << it.docId;
-//		cout << ' ';
-//		cout << it.termFrequencyInDoc;
-//		cout << '\n';
-//}
+list<OccurrenceFile*> IndexWriter::createRuns(){
+	ofile->rewind();
+	list<OccurrenceFile*> runs;
+	while( ofile->hasNext() ) {
+		int blockNumber = runs.size()+1;
+		
+		cout << endl << "Reading block " << blockNumber << endl;
+		Occurrence occurs[runSize];
+		int occursRead = ofile->readBlock(occurs, runSize);
 
+		cout << "Sorting block " << blockNumber << "." << endl;
+		sort(occurs, occurs+occursRead);
+		
+		stringstream fileName;
+		fileName << "run" << blockNumber;
+		OccurrenceFile* tempFile = new OccurrenceFile(fileName.str());
+		
+		cout << "Rewriting ordered run in file " << fileName.str() << endl;
+		tempFile->writeBlock(occurs, occursRead);
+		tempFile->close();
+		runs.push_back(tempFile);
+	}
+	return runs;
+}
+
+OccurrenceFile* IndexWriter::merge(list<OccurrenceFile*>& runs) {
+	cout << endl << "Merging " << runs.size() <<" runs..." << endl;
+	
+	if(runs.size() == 1){
+		cout << "Oly one Run. No need to merge." << endl;
+		return runs.front();
+	}
+	
+	OccurrenceFile* merged = 0;
+	OccurrenceFile* run1 = 0;
+	OccurrenceFile* run2 = 0;
+	
+	int id = 0;
+	while(runs.size() > 1) {
+		run1 = runs.front();
+//		run1->reopen();
+		runs.pop_front();
+		
+		run2 = runs.front();
+//		run2->reopen();
+		runs.pop_front();
+	
+		
+		stringstream name;
+		name << "temp" << id++;
+		merged = new OccurrenceFile( name.str() );
+		
+		merge2runs(run1, run2, merged);
+		
+		run1->deleteFile();
+		run2->deleteFile();
+		
+		runs.push_back(merged);
+	}
+	
+	cout << "Runs merged into one file with " << runs.front()->getSize() << " entries." << endl;
+	return runs.front();
+}
+
+void IndexWriter::merge2runs(OccurrenceFile* runA,
+							 OccurrenceFile* runB,
+							 OccurrenceFile* mergedFile ) {
+							 	
+	runA->reopen();
+	runB->reopen();
+	mergedFile->reopen();
+	
+	cout << "Merging "<< runA->getName() <<" and "<< runB->getName() << " into " << mergedFile->getName() << endl;
+	cout << runA->getName() << " size: " << runA->getSize() << endl;
+	cout << runB->getName() << " size: " << runB->getSize() << endl;
+	
+	Occurrence headA = runA->read();
+	Occurrence headB = runB->read();
+	
+	while ( (runA->getPosition() <= runA->getSize()) && runB->getPosition() <= runB->getSize() ) {
+		if(headA < headB){
+			mergedFile->write(headA);
+			headA = runA->read();
+		} else {
+			mergedFile->write(headB);
+			headB = runB->read();
+		}
+	}
+	
+	while( runA->getPosition() <= runA->getSize() ){
+		mergedFile->write(headA);
+		headA = runA->read();
+	}
+	
+	while( runB->getPosition() <= runB->getSize() ){
+		mergedFile->write(headB);
+		headB = runB->read();
+	}
+	
+	cout << "Finished merging "<< mergedFile->getName() <<" with " 
+		 << mergedFile->getSize() << " entries." << endl << endl;
+}
+
+void IndexWriter::printOccurence(Occurrence& it){
+		cout << it.termId;
+		cout << ' ';
+		cout << it.docId;
+		cout << ' ';
+		cout << it.termFrequencyInDoc;
+		cout << '\n';
+}

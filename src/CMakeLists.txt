@@ -6,7 +6,6 @@ ADD_EXECUTABLE(	indexer Main.cpp
 				TextTokenizer.h TextTokenizer.cpp
 				IndexWriter.h IndexWriter.cpp
 				Term.h
-				Occurrence.h OccurrenceFile.h
 				Pair.h
 				Vocabulary.h
 				SequenceFile.h)
@@ -14,7 +13,6 @@ ADD_EXECUTABLE(	indexer Main.cpp
 ADD_LIBRARY(TP1 TextTokenizer.h TextTokenizer.cpp
 				IndexWriter.h IndexWriter.cpp
 				Term.h
-				Occurrence.h OccurrenceFile.h
 				Pair.h
 				Vocabulary.h
 				SequenceFile.h)

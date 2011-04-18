@@ -14,7 +14,7 @@
 #include <map>
 #include <list>
 #include "Occurrence.h"
-#include "OccurrenceFile.h"
+#include "SequenceFile.h"
 #include "InvertedFile.h"
 #include "Vocabulary.h"
 
@@ -30,7 +30,7 @@ class IndexWriter {
 	int docIdCounter;
 	int termIdCounter;
 	
-	OccurrenceFile* occurrencesFile;
+	SequenceFile<Occurrence>* occurrencesFile;
 	
 	string extractTextFrom(string& html);
 	void printOccurence(Occurrence& it);
@@ -41,10 +41,10 @@ public:
 	int addDocument(string&);
 	void commit();
 	
-	list<OccurrenceFile*> createRuns();
-	OccurrenceFile* merge(list<OccurrenceFile*>&);
-	void merge2runs(OccurrenceFile*, OccurrenceFile*, OccurrenceFile*);
-	InvertedFile* createInvertedFile(OccurrenceFile* of);
+	list<SequenceFile<Occurrence>*> createRuns();
+	SequenceFile<Occurrence>* merge(list<SequenceFile<Occurrence>*>&);
+	void merge2runs(SequenceFile<Occurrence>*, SequenceFile<Occurrence>*, SequenceFile<Occurrence>*);
+	InvertedFile* createInvertedFile(SequenceFile<Occurrence>* of);
 	
 };
 

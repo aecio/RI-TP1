@@ -8,7 +8,7 @@
 #include <vector>
 #include <assert.h>
 #include "Occurrence.h"
-#include "OccurrenceFile.h"
+#include "SequenceFile.h"
 #include "IndexWriter.h"
 #include "Pair.h"
 #include "InvertedFile.h"
@@ -21,9 +21,9 @@ void should_merge_2_sorted_runs_into_one_sorted_file(){
 	//given
 	IndexWriter* iw = new IndexWriter("directory");
 	
-	OccurrenceFile runA("run1");
-	OccurrenceFile runB("run2");
-	OccurrenceFile runC("merged");
+	SequenceFile<Occurrence> runA("run1");
+	SequenceFile<Occurrence> runB("run2");
+	SequenceFile<Occurrence> runC("merged");
 	
 	Occurrence oc1(1, 1, 1);
 	Occurrence oc2(2, 2, 2);
@@ -64,9 +64,9 @@ void should_merge_a_list_of_sorted_runs_into_one_sorted_file(){
 	//given
 	IndexWriter* iw = new IndexWriter("directory");
 	
-	OccurrenceFile runA("run1");
-	OccurrenceFile runB("run2");
-	OccurrenceFile runC("run3");
+	SequenceFile<Occurrence> runA("run1");
+	SequenceFile<Occurrence> runB("run2");
+	SequenceFile<Occurrence> runC("run3");
 	
 	Occurrence oc1(1, 1, 1);
 	Occurrence oc2(2, 2, 2);
@@ -92,13 +92,13 @@ void should_merge_a_list_of_sorted_runs_into_one_sorted_file(){
 	runC.write(oc3);
 	runC.write(oc9);
 	
-	list<OccurrenceFile*> list;
+	list<SequenceFile<Occurrence>*> list;
 	list.push_back(&runA);
 	list.push_back(&runB);
 	list.push_back(&runC);
 	
 	//when
-	OccurrenceFile* merged = iw->merge(list);
+	SequenceFile<Occurrence>* merged = iw->merge(list);
 	merged->rewind();
 	
 	//then

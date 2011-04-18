@@ -17,7 +17,7 @@
 #include <htmlcxx/html/ParserDom.h>
 #include "IndexWriter.h"
 #include "TextTokenizer.h"
-#include "OccurrenceFile.h"
+#include "SequenceFile.h"
 #include "Pair.h"
 #include "InvertedFile.h"
 
@@ -28,7 +28,7 @@ IndexWriter::IndexWriter(string directory_ = "indice"){
 	docIdCounter = 0;
 	termIdCounter = 0;
 	directory = directory_;
-	occurrencesFile = new OccurrenceFile("occurrences");
+	occurrencesFile = new SequenceFile<Occurrence>("occurrences");
 }
 	
 string IndexWriter::extractTextFrom(string& html){
@@ -45,29 +45,6 @@ string IndexWriter::extractTextFrom(string& html){
 	}
 	return text;
 }
-	
-
-//Term& IndexWriter::getVocabularyTerm(string t) {
-//	map<string, Term>::iterator entry = vocabulary.find(t);
-//	if(entry == vocabulary.end() ){
-//		Term& term = vocabulary[t];
-//		term.id = ++termIdCounter;
-//		return term;
-//	} else {
-//		return entry->second;
-//	}
-//}
-
-
-//Term* IndexWriter::findTermById(int id){
-//	map<string, Term>::iterator it = vocabulary.begin();
-//	for(; it != vocabulary.end(); it++){
-//		if(it->second.id == id){
-//			return &(it->second);
-//		}
-//	}
-//	return 0;
-//}
 
 int IndexWriter::addDocument(string& html){
 	string text = extractTextFrom(html);
@@ -88,15 +65,14 @@ int IndexWriter::addDocument(string& html){
 		occurrencesFile->write(oc);
 		
 	}
-	
 	return docIdCounter;
 }
 
 void IndexWriter::commit() {
 	
-	list<OccurrenceFile*> runs = createRuns();
+	list<SequenceFile<Occurrence>*> runs = createRuns();
 	
-	OccurrenceFile* occurrencesSorted = merge(runs);
+	SequenceFile<Occurrence>* occurrencesSorted = merge(runs);
 
 	InvertedFile* invertedLists = createInvertedFile(occurrencesSorted);
 	
@@ -109,7 +85,7 @@ void IndexWriter::commit() {
 	cout << "Creating inverted file... Done." << endl;
 }
 
-InvertedFile* IndexWriter::createInvertedFile(OccurrenceFile* of){
+InvertedFile* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of){
 	
 	InvertedFile* index = new InvertedFile("index");
 	Occurrence block[RUN_SIZE];
@@ -148,9 +124,9 @@ InvertedFile* IndexWriter::createInvertedFile(OccurrenceFile* of){
 	return index;
 }
 
-list<OccurrenceFile*> IndexWriter::createRuns(){
+list<SequenceFile<Occurrence>*> IndexWriter::createRuns(){
 	occurrencesFile->rewind();
-	list<OccurrenceFile*> runs;
+	list<SequenceFile<Occurrence>*> runs;
 	while( occurrencesFile->hasNext() ) {
 		int blockNumber = runs.size()+1;
 		
@@ -163,7 +139,7 @@ list<OccurrenceFile*> IndexWriter::createRuns(){
 		
 		stringstream fileName;
 		fileName << "run" << blockNumber;
-		OccurrenceFile* tempFile = new OccurrenceFile(fileName.str());
+		SequenceFile<Occurrence>* tempFile = new SequenceFile<Occurrence>(fileName.str());
 		
 		cout << "Rewriting ordered run in file " << fileName.str() << endl;
 		tempFile->writeBlock(occurs, occursRead);
@@ -173,7 +149,7 @@ list<OccurrenceFile*> IndexWriter::createRuns(){
 	return runs;
 }
 
-OccurrenceFile* IndexWriter::merge(list<OccurrenceFile*>& runs) {
+SequenceFile<Occurrence>* IndexWriter::merge(list<SequenceFile<Occurrence>*>& runs) {
 	cout << endl << "Merging " << runs.size() <<" runs..." << endl;
 	
 	if(runs.size() == 1){
@@ -181,9 +157,9 @@ OccurrenceFile* IndexWriter::merge(list<OccurrenceFile*>& runs) {
 		return runs.front();
 	}
 	
-	OccurrenceFile* merged = 0;
-	OccurrenceFile* run1 = 0;
-	OccurrenceFile* run2 = 0;
+	SequenceFile<Occurrence>* merged = 0;
+	SequenceFile<Occurrence>* run1 = 0;
+	SequenceFile<Occurrence>* run2 = 0;
 	
 	int id = 0;
 	while(runs.size() > 1) {
@@ -195,7 +171,7 @@ OccurrenceFile* IndexWriter::merge(list<OccurrenceFile*>& runs) {
 	
 		stringstream name;
 		name << "temp" << id++;
-		merged = new OccurrenceFile( name.str() );
+		merged = new SequenceFile<Occurrence>( name.str() );
 		
 		merge2runs(run1, run2, merged);
 		
@@ -209,9 +185,9 @@ OccurrenceFile* IndexWriter::merge(list<OccurrenceFile*>& runs) {
 	return runs.front();
 }
 
-void IndexWriter::merge2runs(OccurrenceFile* runA,
-							 OccurrenceFile* runB,
-							 OccurrenceFile* mergedFile ) {
+void IndexWriter::merge2runs(SequenceFile<Occurrence>* runA,
+							 SequenceFile<Occurrence>* runB,
+							 SequenceFile<Occurrence>* mergedFile ) {
 							 	
 	runA->reopen();
 	runB->reopen();

@@ -11,7 +11,6 @@
 #include "SequenceFile.h"
 #include "IndexWriter.h"
 #include "Pair.h"
-#include "InvertedFile.h"
 
 using namespace std;
 
@@ -132,7 +131,7 @@ void should_create_inverted_file_correctly(){
 	iw->commit();
 	
 	//then
-	InvertedFile* index = new InvertedFile("index", false);
+	SequenceFile<Pair>* index = new SequenceFile<Pair>("index", false);
 	
 	//term1
 	Pair p = index->read();

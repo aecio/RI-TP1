@@ -19,7 +19,6 @@
 #include "TextTokenizer.h"
 #include "SequenceFile.h"
 #include "Pair.h"
-#include "InvertedFile.h"
 
 using namespace std;
 using namespace htmlcxx;
@@ -74,7 +73,7 @@ void IndexWriter::commit() {
 	
 	SequenceFile<Occurrence>* occurrencesSorted = merge(runs);
 
-	InvertedFile* invertedLists = createInvertedFile(occurrencesSorted);
+	SequenceFile<Pair>* invertedLists = createInvertedFile(occurrencesSorted);
 	
 	vocabulary.saveTo("vocabulary");
 	
@@ -85,9 +84,9 @@ void IndexWriter::commit() {
 	cout << "Creating inverted file... Done." << endl;
 }
 
-InvertedFile* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of){
+SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of){
 	
-	InvertedFile* index = new InvertedFile("index");
+	SequenceFile<Pair>* index = new SequenceFile<Pair>("index");
 	Occurrence block[RUN_SIZE];
 	of->reopen();
 	

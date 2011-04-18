@@ -15,8 +15,8 @@
 #include <list>
 #include "Occurrence.h"
 #include "SequenceFile.h"
-#include "InvertedFile.h"
 #include "Vocabulary.h"
+#include "Pair.h"
 
 using namespace std;
 	
@@ -44,7 +44,7 @@ public:
 	list<SequenceFile<Occurrence>*> createRuns();
 	SequenceFile<Occurrence>* merge(list<SequenceFile<Occurrence>*>&);
 	void merge2runs(SequenceFile<Occurrence>*, SequenceFile<Occurrence>*, SequenceFile<Occurrence>*);
-	InvertedFile* createInvertedFile(SequenceFile<Occurrence>* of);
+	 SequenceFile<Pair>* createInvertedFile(SequenceFile<Occurrence>* of);
 	
 };
 

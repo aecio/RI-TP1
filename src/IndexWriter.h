@@ -13,36 +13,38 @@
 #include <string>
 #include <map>
 #include <list>
-#include "Term.h"
 #include "Occurrence.h"
 #include "OccurrenceFile.h"
+#include "InvertedFile.h"
+#include "Vocabulary.h"
 
 using namespace std;
 	
 class IndexWriter {
 
+	static const unsigned int RUN_SIZE = 200000;
+	
 	string directory;
-	map<string, Term> vocabulary;
+	Vocabulary vocabulary;
 	
-	int docId;
-	int termId;
+	int docIdCounter;
+	int termIdCounter;
 	
-	OccurrenceFile* ofile;
-	unsigned int runSize;
+	OccurrenceFile* occurrencesFile;
 	
 	string extractTextFrom(string& html);
-	Term& getVocabularyTerm(string t);
-	
 	void printOccurence(Occurrence& it);
+	
 public:
+	IndexWriter(string directory);
+
+	int addDocument(string&);
+	void commit();
+	
 	list<OccurrenceFile*> createRuns();
 	OccurrenceFile* merge(list<OccurrenceFile*>&);
 	void merge2runs(OccurrenceFile*, OccurrenceFile*, OccurrenceFile*);
-	
-	IndexWriter(string directory);
-	
-	void addDocument(string&);
-	void commit();
+	InvertedFile* createInvertedFile(OccurrenceFile* of);
 	
 };
 

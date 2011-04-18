@@ -10,11 +10,13 @@
 #include "Occurrence.h"
 #include "OccurrenceFile.h"
 #include "IndexWriter.h"
+#include "Pair.h"
+#include "InvertedFile.h"
 
 using namespace std;
 
 void should_merge_2_sorted_runs_into_one_sorted_file(){
-	cout << "> should_merge_2_sorted_runs_in_another_sorted_file" << endl;
+	cout << ">>> should_merge_2_sorted_runs_in_another_sorted_file" << endl;
 
 	//given
 	IndexWriter* iw = new IndexWriter("directory");
@@ -57,7 +59,7 @@ void should_merge_2_sorted_runs_into_one_sorted_file(){
 }
 
 void should_merge_a_list_of_sorted_runs_into_one_sorted_file(){
-	cout << "> should_merge_a_list_of_sorted_runs_into_one_sorted_file" << endl;
+	cout << ">>> should_merge_a_list_of_sorted_runs_into_one_sorted_file" << endl;
 	
 	//given
 	IndexWriter* iw = new IndexWriter("directory");
@@ -112,6 +114,70 @@ void should_merge_a_list_of_sorted_runs_into_one_sorted_file(){
 	assert(merged->getSize() == 10);
 }
 
+void should_create_inverted_file_correctly(){
+	cout << ">>> should_create_inverted_file_correctly" << endl;
+	
+	//given
+	IndexWriter* iw = new IndexWriter("directory");
+	
+	string doc1 = "termo1 termo2 termo3 termo4";
+	string doc2 = "termo1 termo2 termo4 termo4";
+	string doc3 = "termo1 termo2 termo1 termo1";
+	
+	iw->addDocument(doc1);
+	iw->addDocument(doc2);
+	iw->addDocument(doc3);
+	
+	//when
+	iw->commit();
+	
+	//then
+	InvertedFile* index = new InvertedFile("index", false);
+	
+	//term1
+	Pair p = index->read();
+	assert(p.docId == 1);
+	assert(p.frequency_dt == 1);
+	
+	p = index->read();
+	assert(p.docId == 2);
+	assert(p.frequency_dt == 1);
+	
+	p = index->read();
+	assert(p.docId == 3);
+	assert(p.frequency_dt == 3);
+	
+	//term2
+	p = index->read();
+	assert(p.docId == 1);
+	assert(p.frequency_dt == 1);
+	
+	p = index->read();
+	assert(p.docId == 2);
+	assert(p.frequency_dt == 1);
+	
+	p = index->read();
+	assert(p.docId == 3);
+	assert(p.frequency_dt == 1);
+	
+	//term3
+	p = index->read();
+	assert(p.docId == 1);
+	assert(p.frequency_dt == 1);
+	
+	//term4
+	p = index->read();
+	assert(p.docId == 1);
+	assert(p.frequency_dt == 1);
+	
+	p = index->read();
+	assert(p.docId == 2);
+	assert(p.frequency_dt == 2);
+	
+}
+
+//when creating inverted file should set the ter pointers in the vocabulary
+
 void indexwriter_test_cases() {
 	cout << "-----------------" << endl;
 	cout << "IndexWriter Tests" << endl;
@@ -120,6 +186,8 @@ void indexwriter_test_cases() {
 	should_merge_2_sorted_runs_into_one_sorted_file();
 	
 	should_merge_a_list_of_sorted_runs_into_one_sorted_file();
+	
+	should_create_inverted_file_correctly();
 	
 }
 

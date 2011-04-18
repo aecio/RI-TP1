@@ -8,29 +8,33 @@
 #ifndef TERM_H_
 #define TERM_H_
 
-#include <fstream>
-#include <list>
-#include "Occurrence.h"
+#include <string>
 
 using namespace std;
 
 class Term {
-	int id;
-	int termFrequency;	// f_t - total frequency of the term (count documents containing this term)
-	streampos listPointer;
 public:
-	Term();
-	Term(int id, int termFrequency);
+	char term[30];
+	int docFrequency;	// f_t - total frequency of the term (count documents containing this term)
+	int listPosition;
 	
-	int getId();
-	void setId(int id);
+	Term() {
+		docFrequency = 0;
+	}
 	
-	int getTermFrequency();
-	void setTermFrequency(int termFrequency);
-	void incrementTermFrequency();
+	Term(string termStr){
+		int size;
+		if(termStr.size() < 30){
+			size = termStr.size();
+		} else {
+			size = 30;
+		}
+		termStr.copy(term, size);
+		term[size] = '\0';
+		docFrequency = 0;
+		listPosition = 0;
+	}
 	
-	streampos getInvertedListPointer();
-	void setInvertedListPointer(streampos);
 };
 
 #endif /* TERM_H_ */

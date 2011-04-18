@@ -31,8 +31,8 @@ int main(int argc, char* argv[]){
 	while(reader->getNextDocument(doc) && docsIndexed < MAX_DOCS){
 		
 		docsIndexed++;
-		cout <<	docsIndexed;
-		cout <<" "<< doc.getURL() << endl;
+//		cout <<	docsIndexed;
+//		cout <<" "<< doc.getURL() << endl;
 		
 		string html =  doc.getText();
 //		html =  "<html><head><title>Título da página</title></head><body><h1>Cabeçalho</h1>\n<p>Texto do parágrafo</p></body></html>";

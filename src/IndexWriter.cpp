@@ -5,7 +5,6 @@
  *      Author: aecio
  */
 
-#include <assert.h> 
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -19,16 +18,17 @@
 #include "IndexWriter.h"
 #include "TextTokenizer.h"
 #include "OccurrenceFile.h"
+#include "Pair.h"
+#include "InvertedFile.h"
 
 using namespace std;
 using namespace htmlcxx;
 	
-IndexWriter::IndexWriter(string directory_){
-	docId = 0;
-	termId = 0;
-	runSize = 200000;
+IndexWriter::IndexWriter(string directory_ = "indice"){
+	docIdCounter = 0;
+	termIdCounter = 0;
 	directory = directory_;
-	ofile = new OccurrenceFile("occurrences");
+	occurrencesFile = new OccurrenceFile("occurrences");
 }
 	
 string IndexWriter::extractTextFrom(string& html){
@@ -47,58 +47,116 @@ string IndexWriter::extractTextFrom(string& html){
 }
 	
 
-Term& IndexWriter::getVocabularyTerm(string t) {
-	map<string, Term>::iterator entry = vocabulary.find(t);
-	if(entry == vocabulary.end() ){
-		Term& term = vocabulary[t];
-		term.setId(++termId);
-		return term;
-	} else {
-		return entry->second;
-	}
-}
+//Term& IndexWriter::getVocabularyTerm(string t) {
+//	map<string, Term>::iterator entry = vocabulary.find(t);
+//	if(entry == vocabulary.end() ){
+//		Term& term = vocabulary[t];
+//		term.id = ++termIdCounter;
+//		return term;
+//	} else {
+//		return entry->second;
+//	}
+//}
 
-void IndexWriter::addDocument(string& html){
+
+//Term* IndexWriter::findTermById(int id){
+//	map<string, Term>::iterator it = vocabulary.begin();
+//	for(; it != vocabulary.end(); it++){
+//		if(it->second.id == id){
+//			return &(it->second);
+//		}
+//	}
+//	return 0;
+//}
+
+int IndexWriter::addDocument(string& html){
 	string text = extractTextFrom(html);
 	TextTokenizer tokenizer(text);
-	map<string, int> docFrequencies;
-	docId++;
+	map<string, int> termFrequencies;
+	docIdCounter++;
 	
 	while(tokenizer.hasNext()){ //para cada termo "indexável"
 		string t = tokenizer.nextToken();
-		docFrequencies[t]++; //contabilizar frequencia do termo neste doc
+		termFrequencies[t]++; //contabilizar frequencia do termo neste doc
 	}
 	
-	map<string, int>::iterator it = docFrequencies.begin();
-	for(; it != docFrequencies.end(); it++){
-		string t = it->first;
-		Term& term = getVocabularyTerm(t);
+	map<string, int>::iterator it = termFrequencies.begin();
+	for(; it != termFrequencies.end(); it++){
 		
-		Occurrence oc(term.getId(), docId, it->second);
-		ofile->write(oc);
+		int termId = vocabulary.addTerm(it->first);
+		Occurrence oc(termId, docIdCounter, it->second);
+		occurrencesFile->write(oc);
+		
 	}
+	
+	return docIdCounter;
 }
 
 void IndexWriter::commit() {
 	
 	list<OccurrenceFile*> runs = createRuns();
-	OccurrenceFile* occurrencesSorted = merge(runs);
 	
-	ofile->close();
-	occurrencesSorted->close();
+	OccurrenceFile* occurrencesSorted = merge(runs);
 
-	cout << "Created sorted occurrences file... Done." << endl;
+	InvertedFile* invertedLists = createInvertedFile(occurrencesSorted);
+	
+	vocabulary.saveTo("vocabulary");
+	
+	occurrencesFile->close();
+	occurrencesSorted->close();
+	invertedLists->close();
+
+	cout << "Creating inverted file... Done." << endl;
+}
+
+InvertedFile* IndexWriter::createInvertedFile(OccurrenceFile* of){
+	
+	InvertedFile* index = new InvertedFile("index");
+	Occurrence block[RUN_SIZE];
+	of->reopen();
+	
+	while( of->hasNext() ){
+		int blockSize = of->readBlock(block, RUN_SIZE);
+		cout << "Read block of size: " << blockSize << endl;
+		int j=0;
+		while(j < blockSize){
+			int termId = block[j].termId;
+
+			cout << "List position: " << index->getPosition() << endl;
+			vocabulary.setListPosition(block[j].termId, index->getPosition() );
+			
+			while(termId == block[j].termId) {
+								
+				Pair entry(block[j].docId, block[j].termFrequencyInDoc);
+				index->write(entry);
+				
+				vocabulary.incrementDocFrequency(termId);
+				
+				j++;
+				
+				//se o array acabar, ler outro bloco
+				if(j >= blockSize && of->hasNext() ){ 
+					blockSize = of->readBlock(block, RUN_SIZE);
+					cout << "Reading a extra block of size: " << blockSize << endl;
+					j=0;
+				}
+			}
+			cout << "Term frequency: " << vocabulary.getDocFrequency(termId) << endl;
+		}
+	}
+	index->close();
+	return index;
 }
 
 list<OccurrenceFile*> IndexWriter::createRuns(){
-	ofile->rewind();
+	occurrencesFile->rewind();
 	list<OccurrenceFile*> runs;
-	while( ofile->hasNext() ) {
+	while( occurrencesFile->hasNext() ) {
 		int blockNumber = runs.size()+1;
 		
 		cout << endl << "Reading block " << blockNumber << endl;
-		Occurrence occurs[runSize];
-		int occursRead = ofile->readBlock(occurs, runSize);
+		Occurrence occurs[RUN_SIZE];
+		int occursRead = occurrencesFile->readBlock(occurs, RUN_SIZE);
 
 		cout << "Sorting block " << blockNumber << "." << endl;
 		sort(occurs, occurs+occursRead);

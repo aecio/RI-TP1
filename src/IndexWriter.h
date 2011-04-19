@@ -22,7 +22,7 @@ using namespace std;
 	
 class IndexWriter {
 
-	static const unsigned int RUN_SIZE = 200000;
+	int RUN_SIZE;
 	
 	string directory;
 	Vocabulary vocabulary;
@@ -36,7 +36,7 @@ class IndexWriter {
 	void printOccurence(Occurrence& it);
 	
 public:
-	IndexWriter(string directory);
+	IndexWriter(string directory, int runSize = 500000);
 
 	int addDocument(string&);
 	void commit();

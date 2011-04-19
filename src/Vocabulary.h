@@ -23,7 +23,19 @@ class Vocabulary {
 	vector<Term> terms;
 	
 public:
-	Vocabulary(){}
+	Vocabulary() {}
+	
+	Vocabulary(string fileToOpen){
+		SequenceFile<Term> sf(fileToOpen, false);
+		
+		while(sf.hasNext()){
+			Term term = sf.read();
+			terms.push_back(term);
+			
+			int& id = vocabulary[string(term.term)];
+			id = vocabulary.size();
+		}
+	}
 	
 	int addTerm(string termStr){
 		map<string, int>::iterator it = vocabulary.find(termStr);
@@ -38,6 +50,16 @@ public:
 			return id;
 		} else {
 			return it->second;
+		}
+	}
+	
+	Term* findTerm(string termStr){
+		map<string, int>::iterator it = vocabulary.find(termStr);
+		if(it == vocabulary.end() ){
+			return 0;
+		} else {
+			Term* p = &terms[it->second];
+			return p;
 		}
 	}
 	

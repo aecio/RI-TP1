@@ -75,7 +75,10 @@ public:
 	}
 	
 	void ensureFileIsOpen(){
-		if( !file.is_open() ) throw FileClosedException();
+		if( !file.is_open() ) {
+			cout << "File " << name << " is not open!" << endl;
+			throw FileClosedException();
+		}
 	}
 	
 	bool hasNext(){
@@ -87,13 +90,6 @@ public:
 		}
 	}
 	
-	bool eof(){
-		if(file.eof())
-			return true;
-		else
-			return false;
-	}
-	
 	int getPosition(){
 		ensureFileIsOpen();
 		int getPointer = file.tellg();
@@ -101,6 +97,12 @@ public:
 			return getPointer;
 		else
 			return getPointer/sizeof(T);
+	}
+	
+	void setPosition(int position){
+		ensureFileIsOpen();
+		file.seekg(position*sizeof(T), ios::beg);
+		file.seekp(position*sizeof(T), ios::beg);
 	}
 	
 	int getSize(){

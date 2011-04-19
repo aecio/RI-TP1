@@ -2,6 +2,7 @@
 #include "IndexWriterTests.cpp"
 #include "VocabularyTests.cpp"
 #include "SequenceFileTests.cpp"
+#include "IndexSearcherTests.cpp"
 
 using namespace std;
 
@@ -13,6 +14,7 @@ int main (int argc, char const* argv[]) {
 	indexwriter_test_cases();
 	vocabulary_test_cases();
 	sequence_file_test_cases();
+	indexsearcher_test_cases();
 	
 	cout << "=============================" << endl;
 	cout << "Tests finished SUCCESSFULLY." << endl;

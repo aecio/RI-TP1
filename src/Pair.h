@@ -19,6 +19,14 @@ public:
 		docId = docId_;
 		frequency_dt = frequency_dt_;
 	}
+	
+	friend bool operator<(const Pair &x, const Pair &y){
+		if(x.docId < y.docId)
+			return true;
+		else
+			return false;
+	}
+	
 };
 
 #endif /* PAIR_H_ */

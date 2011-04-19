@@ -10,7 +10,7 @@
 #include "Occurrence.h"
 #include "SequenceFile.h"
 
-#define SEQUENCE_TEST_FILE "sequencefile.test"
+#define SEQUENCE_TEST_FILE "indice_test/sequencefile.test"
 
 using namespace std;
 
@@ -181,6 +181,43 @@ void should_return_correct_size_after_reopen(){
 	assert(sequenceFile.getPosition() == 0);
 }
 
+void should_set_the_position_in_the_file(){
+	cout << ">>> should_set_the_position_in_the_file" << endl;
+	//given
+	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
+	Occurrence oc1(0, 0, 0);
+	Occurrence oc2(1, 1, 1);
+	Occurrence oc3(2, 2, 2);
+	sequenceFile.write(oc1);
+	sequenceFile.write(oc2);
+	sequenceFile.write(oc3);
+	Occurrence o;
+	
+	//when
+	sequenceFile.setPosition(1);
+	//then
+	o = sequenceFile.read();
+	assert(o.termId == 1);
+	assert(o.termFrequencyInDoc == 1);
+	assert(o.docId == 1);
+	
+	//when
+	sequenceFile.setPosition(0);
+	//then
+	o = sequenceFile.read();
+	assert(o.termId == 0);
+	assert(o.termFrequencyInDoc == 0);
+	assert(o.docId == 0);
+
+	//when
+	sequenceFile.setPosition(2);
+	//then
+	o = sequenceFile.read();
+	assert(o.termId == 2);
+	assert(o.termFrequencyInDoc == 2);
+	assert(o.docId == 2);
+}
+
 void sequence_file_test_cases() {
 	cout << "--------------------" << endl;
 	cout << "SequenceFile Tests" << endl;
@@ -201,5 +238,7 @@ void sequence_file_test_cases() {
 	should_write_a_block_of_objects();
 
 	should_return_correct_size_after_reopen();
+	
+	should_set_the_position_in_the_file();
 }
 

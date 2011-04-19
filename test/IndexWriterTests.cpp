@@ -18,11 +18,11 @@ void should_merge_2_sorted_runs_into_one_sorted_file(){
 	cout << ">>> should_merge_2_sorted_runs_in_another_sorted_file" << endl;
 
 	//given
-	IndexWriter* iw = new IndexWriter("directory");
+	IndexWriter* iw = new IndexWriter("./indice_test/");
 	
-	SequenceFile<Occurrence> runA("run1");
-	SequenceFile<Occurrence> runB("run2");
-	SequenceFile<Occurrence> runC("merged");
+	SequenceFile<Occurrence> runA("./indice_test/run1");
+	SequenceFile<Occurrence> runB("./indice_test/run2");
+	SequenceFile<Occurrence> runC("./indice_test/merged");
 	
 	Occurrence oc1(1, 1, 1);
 	Occurrence oc2(2, 2, 2);
@@ -61,11 +61,11 @@ void should_merge_a_list_of_sorted_runs_into_one_sorted_file(){
 	cout << ">>> should_merge_a_list_of_sorted_runs_into_one_sorted_file" << endl;
 	
 	//given
-	IndexWriter* iw = new IndexWriter("directory");
+	IndexWriter* iw = new IndexWriter("./indice_test");
 	
-	SequenceFile<Occurrence> runA("run1");
-	SequenceFile<Occurrence> runB("run2");
-	SequenceFile<Occurrence> runC("run3");
+	SequenceFile<Occurrence> runA("./indice_test/run1");
+	SequenceFile<Occurrence> runB("./indice_test/run2");
+	SequenceFile<Occurrence> runC("./indice_test/run3");
 	
 	Occurrence oc1(1, 1, 1);
 	Occurrence oc2(2, 2, 2);
@@ -117,7 +117,7 @@ void should_create_inverted_file_correctly(){
 	cout << ">>> should_create_inverted_file_correctly" << endl;
 	
 	//given
-	IndexWriter* iw = new IndexWriter("directory");
+	IndexWriter* iw = new IndexWriter("./indice_test/");
 	
 	string doc1 = "termo1 termo2 termo3 termo4";
 	string doc2 = "termo1 termo2 termo4 termo4";
@@ -131,7 +131,7 @@ void should_create_inverted_file_correctly(){
 	iw->commit();
 	
 	//then
-	SequenceFile<Pair>* index = new SequenceFile<Pair>("index", false);
+	SequenceFile<Pair>* index = new SequenceFile<Pair>("./indice_test/index", false);
 	
 	//term1
 	Pair p = index->read();

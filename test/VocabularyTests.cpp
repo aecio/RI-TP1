@@ -9,7 +9,7 @@
 #include <assert.h>
 #include "Vocabulary.h"
 
-#define TEST_FILE "occurrences_test"
+#define VOCABULARY_TEST_FILE "indice_test/vocabulary"
 
 using namespace std;
 
@@ -112,10 +112,10 @@ void should_save_terms_to_a_file(){
 	assert(v.getDocFrequency(id3) == 3);
 	
 	//when
-	v.saveTo("vocabulary");
+	v.saveTo(VOCABULARY_TEST_FILE);
 	
 	//then
-	SequenceFile<Term> sf("vocabulary", false);
+	SequenceFile<Term> sf(VOCABULARY_TEST_FILE, false);
 	
 	Term t = sf.read();
 	assert(term1.compare(t.term) == 0);

@@ -10,11 +10,19 @@ ADD_EXECUTABLE(	indexer Main.cpp
 				Vocabulary.h
 				SequenceFile.h)
 				
+ADD_EXECUTABLE(	searcher Searcher.cpp
+				Pair.h
+				Vocabulary.h
+				SequenceFile.h
+				TextTokenizer.h TextTokenizer.cpp)
+				
 ADD_LIBRARY(TP1 TextTokenizer.h TextTokenizer.cpp
 				IndexWriter.h IndexWriter.cpp
 				Term.h
 				Pair.h
 				Vocabulary.h
 				SequenceFile.h)
+				
+				
 
 TARGET_LINK_LIBRARIES(indexer z htmlcxx RICPlib)

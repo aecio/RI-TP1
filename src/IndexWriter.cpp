@@ -23,8 +23,8 @@
 using namespace std;
 using namespace htmlcxx;
 	
-IndexWriter::IndexWriter(string directory_, int runSize){
-	RUN_SIZE = runSize;	
+IndexWriter::IndexWriter(string directory_, int runSize_){
+	runSize = runSize_;	
 	directory = directory_;
 	docIdCounter = 0;
 	termIdCounter = 0;
@@ -88,10 +88,10 @@ void IndexWriter::commit() {
 SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of){
 	cout << endl << "Creating final index file..." << endl;
 	SequenceFile<Pair>* index = new SequenceFile<Pair>(directory + "/index");
-	Occurrence* block = new Occurrence[RUN_SIZE];
+	Occurrence* block = new Occurrence[runSize];
 	of->reopen();
 	while( of->hasNext() ){
-		int blockSize = of->readBlock(block, RUN_SIZE);
+		int blockSize = of->readBlock(block, runSize);
 		int j=0;
 		while(j < blockSize){
 			int termId = block[j].termId;
@@ -109,7 +109,7 @@ SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of
 				
 				//se o array acabar, ler outro bloco
 				if(j >= blockSize && of->hasNext() ){ 
-					blockSize = of->readBlock(block, RUN_SIZE);
+					blockSize = of->readBlock(block, runSize);
 					j=0;
 				}
 			}
@@ -122,12 +122,12 @@ SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of
 list<SequenceFile<Occurrence>*> IndexWriter::createRuns(){
 	occurrencesFile->rewind();
 	list<SequenceFile<Occurrence>*> runs;
-	Occurrence* occurs = new Occurrence[RUN_SIZE];
+	Occurrence* occurs = new Occurrence[runSize];
 	while( occurrencesFile->hasNext() ) {
 		int blockNumber = runs.size()+1;
 		
 		cout << endl << "Reading block " << blockNumber << endl;
-		int occursRead = occurrencesFile->readBlock(occurs, RUN_SIZE);
+		int occursRead = occurrencesFile->readBlock(occurs, runSize);
 
 		cout << "Sorting block " << blockNumber << "." << endl;
 		sort(occurs, occurs+occursRead);

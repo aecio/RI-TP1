@@ -22,7 +22,7 @@ using namespace std;
 	
 class IndexWriter {
 
-	int RUN_SIZE;
+	int runSize;
 	
 	string directory;
 	Vocabulary vocabulary;

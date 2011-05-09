@@ -8,20 +8,23 @@ ADD_EXECUTABLE(	indexer Main.cpp
 				Term.h
 				Pair.h
 				Vocabulary.h
-				SequenceFile.h)
+				SequenceFile.h
+				VSMIndexSearcher.h)
 				
 ADD_EXECUTABLE(	searcher Searcher.cpp
 				Pair.h
 				Vocabulary.h
 				SequenceFile.h
-				TextTokenizer.h TextTokenizer.cpp)
+				TextTokenizer.h TextTokenizer.cpp
+				VSMIndexSearcher.h)
 				
 ADD_LIBRARY(TP1 TextTokenizer.h TextTokenizer.cpp
 				IndexWriter.h IndexWriter.cpp
 				Term.h
 				Pair.h
 				Vocabulary.h
-				SequenceFile.h)
+				SequenceFile.h
+				VSMIndexSearcher.h)
 				
 				
 

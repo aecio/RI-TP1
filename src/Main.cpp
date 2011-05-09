@@ -6,6 +6,7 @@
 #include "Document.h"
 #include "TextTokenizer.h"
 #include "IndexWriter.h"
+#include "Page.h"
 
 #define MAX_DOCS 99999999
 #define RUN_SIZE 200000
@@ -65,10 +66,8 @@ int main(int argc, char* argv[]){
 			cout <<	docsIndexed << " documents..." << endl;
 		}
 		
-		string html = doc.getURL();
-		html += " ";
-		html += doc.getText();
-		iw->addDocument(html);
+		Page p(doc.getURL(), doc.getText());
+		iw->addDocument(p);
 
 		doc.clear();
 	}

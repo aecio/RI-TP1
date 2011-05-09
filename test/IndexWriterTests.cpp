@@ -119,13 +119,15 @@ void should_create_inverted_file_correctly(){
 	//given
 	IndexWriter* iw = new IndexWriter("./indice_test/");
 	
-	string doc1 = "termo1 termo2 termo3 termo4";
-	string doc2 = "termo1 termo2 termo4 termo4";
-	string doc3 = "termo1 termo2 termo1 termo1";
+	Page doc1("", "termo1 termo2 termo3 termo4");
+	Page doc2("", "termo1 termo2 termo4 termo4");
+	Page doc3("", "termo1 termo2 termo1 termo1");
 	
 	iw->addDocument(doc1);
 	iw->addDocument(doc2);
 	iw->addDocument(doc3);
+
+	Pair p;
 	
 	//when
 	iw->commit();
@@ -134,16 +136,19 @@ void should_create_inverted_file_correctly(){
 	SequenceFile<Pair>* index = new SequenceFile<Pair>("./indice_test/index", false);
 	
 	//term1
-	Pair p = index->read();
+	p = index->read();
 	assert(p.docId == 1);
+	cout << p.frequency_dt << endl; 
 	assert(p.frequency_dt == 1);
 	
 	p = index->read();
 	assert(p.docId == 2);
+	cout << p.frequency_dt << endl; 
 	assert(p.frequency_dt == 1);
 	
 	p = index->read();
 	assert(p.docId == 3);
+	cout << p.frequency_dt << endl; 
 	assert(p.frequency_dt == 3);
 	
 	//term2

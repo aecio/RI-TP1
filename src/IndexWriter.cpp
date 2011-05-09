@@ -13,15 +13,13 @@
 #include <list>
 #include <vector>
 #include <algorithm>
-#include <htmlcxx/html/Node.h>
-#include <htmlcxx/html/ParserDom.h>
 #include "IndexWriter.h"
 #include "TextTokenizer.h"
 #include "SequenceFile.h"
 #include "Pair.h"
+#include "Page.h"
 
 using namespace std;
-using namespace htmlcxx;
 	
 IndexWriter::IndexWriter(string directory_, int runSize_){
 	runSize = runSize_;	
@@ -29,26 +27,13 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	docIdCounter = 0;
 	termIdCounter = 0;
 	occurrencesFile = new SequenceFile<Occurrence>(directory + "/occurrences");
+	pagesFile = new SequenceFile<Doc>(directory + "/urls");
 }
 	
-string IndexWriter::extractTextFrom(string& html){
-	HTML::ParserDom parser;
-	tree<HTML::Node> dom = parser.parseTree(html);
-	tree<HTML::Node>::iterator it = dom.begin();
-	tree<HTML::Node>::iterator end = dom.end();
-	string text = "";	
-	for (; it != end; ++it) {
-		if ((!it->isTag()) && (!it->isComment()) ) {
-			text += " ";
-			text += it->text();
-		}
-	}
-	return text;
-}
-
-int IndexWriter::addDocument(string& html){
-	string text = extractTextFrom(html);
+int IndexWriter::addDocument(Page& page){
+	string text = page.getPlainText();
 	TextTokenizer tokenizer(text);
+
 	map<string, int> termFrequencies;
 	docIdCounter++;
 	
@@ -65,6 +50,11 @@ int IndexWriter::addDocument(string& html){
 		occurrencesFile->write(oc);
 		
 	}
+	Doc d(page.url);
+	pagesFile->write(d);
+	
+	cout << docIdCounter << " - " << d.url << endl;
+	
 	return docIdCounter;
 }
 
@@ -81,6 +71,13 @@ void IndexWriter::commit() {
 	vocabulary.saveTo(directory + "/vocabulary");
 	
 	invertedLists->close();
+	pagesFile->close();
+	
+	pagesFile->reopen();
+	while(pagesFile->hasNext()){
+		cout << pagesFile->getPosition() << " = " << pagesFile->read().url << endl;
+	}
+	pagesFile->close();
 
 	cout << "Done." << endl;
 }

@@ -17,6 +17,8 @@
 #include "SequenceFile.h"
 #include "Vocabulary.h"
 #include "Pair.h"
+#include "Page.h"
+#include "Doc.h"
 
 using namespace std;
 	
@@ -31,6 +33,7 @@ class IndexWriter {
 	int termIdCounter;
 	
 	SequenceFile<Occurrence>* occurrencesFile;
+	SequenceFile<Doc>* pagesFile;
 	
 	string extractTextFrom(string& html);
 	void printOccurence(Occurrence& it);
@@ -38,7 +41,7 @@ class IndexWriter {
 public:
 	IndexWriter(string directory, int runSize = 500000);
 
-	int addDocument(string&);
+	int addDocument(Page& page);
 	void commit();
 	
 	list<SequenceFile<Occurrence>*> createRuns();

@@ -9,6 +9,7 @@
 #include <vector>
 #include "IndexSearcher.h"
 #include "Pair.h"
+#include "Doc.h"
 
 using namespace std;
 
@@ -26,6 +27,11 @@ int main(int argc, char* argv[]){
 	}
 	cout << "Loading index..." << endl;
 	IndexSearcher searcher(directory);
+	SequenceFile<Doc>* pagesFile = new SequenceFile<Doc>(directory + "/urls", false);
+	while(pagesFile->hasNext()){
+		cout << pagesFile->getPosition() << " = " << pagesFile->read().url << endl;
+	}
+	
 	
 	string query;
 	cout << "Type you query (and press ENTER): ";
@@ -38,7 +44,10 @@ int main(int argc, char* argv[]){
 			cout << "Search results for: " << query << endl;
 			vector<Pair>::iterator it = hits.begin();
 			for(; it != hits.end(); it++){
-				cout << " -> " << it->docId << endl;
+				pagesFile->setPosition(it->docId-1);
+				Doc d = pagesFile->read();
+				cout << " -> " << it->docId << " - ";
+				cout << d.url << endl;
 			}
 		}
 		cout << "Type you query (and press ENTER): ";

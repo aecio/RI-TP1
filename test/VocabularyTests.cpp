@@ -133,6 +133,40 @@ void should_save_terms_to_a_file(){
 	assert(t.listPosition == 30);
 }
 
+void should_rebuild_vocabulary_correctly(){
+	cout << ">>> should_rebuild_vocabulary_correctly" << endl;
+	
+	Vocabulary v;	
+	string term1 = "term1";
+	string term2 = "term2";
+	string term3 = "term3";
+	
+	int id1 = v.addTerm(term1);
+	assert(id1 == 1);
+	
+	int id2 = v.addTerm(term2);
+	assert(id2 == 2);
+	
+	int id3 = v.addTerm(term3);
+	assert(id3 == 3);
+	
+	v.saveTo(VOCABULARY_TEST_FILE);
+	
+	//when
+	Vocabulary vocabulary(VOCABULARY_TEST_FILE);
+	
+	//then
+	Term* t;
+	t = vocabulary.findTerm(term1);
+	assert(term1.compare(t->term) == 0);
+	
+	t = vocabulary.findTerm(term2);
+	assert(term2.compare(t->term) == 0);
+	
+	t = vocabulary.findTerm(term3);
+	assert(term3.compare(t->term) == 0);
+}
+
 void vocabulary_test_cases() {
 	cout << "--------------------" << endl;
 	cout << "Vocabulary Tests" << endl;
@@ -143,5 +177,6 @@ void vocabulary_test_cases() {
 	should_increment_and_return_frequency_of_the_terms();
 	should_set_and_return_correct_list_positions();
 	should_save_terms_to_a_file();
+	should_rebuild_vocabulary_correctly();
 }
 

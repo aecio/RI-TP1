@@ -30,10 +30,11 @@ public:
 		
 		while(sf.hasNext()){
 			Term term = sf.read();
+
 			terms.push_back(term);
 			
 			int& id = vocabulary[string(term.term)];
-			id = vocabulary.size();
+			id = vocabulary.size()-1;
 		}
 	}
 	
@@ -44,6 +45,7 @@ public:
 			Term term(termStr);
 			
 			terms.push_back(term);
+			
 			int& id = vocabulary[termStr];
 			id = vocabulary.size();
 			
@@ -56,7 +58,7 @@ public:
 	Term* findTerm(string termStr){
 		map<string, int>::iterator it = vocabulary.find(termStr);
 		if(it == vocabulary.end() ){
-			return 0;
+			return NULL;
 		} else {
 			Term* p = &terms[it->second];
 			return p;

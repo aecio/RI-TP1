@@ -9,19 +9,27 @@
 #define DOC_H_
 
 #include <string>
+#include <stdlib.h>
 
 using namespace std;
 
 class Doc {
 public:
+	int id;
 	char url[1000];
+	int length;
 
-	Doc() {}
+	Doc() {
+		length = 0;
+	}
 	
-	Doc(string strUrl){
-		size_t length;
-		length = strUrl.copy(url, strUrl.size(), 0);
-		url[length]='\0';
+	Doc(int id_, string strUrl, int docLength){
+		id = id_;
+		size_t urlSize;
+		urlSize = strUrl.copy(url, strUrl.size(), 0);
+		url[urlSize]='\0';
+		
+		length = docLength;
 	}
 };
 

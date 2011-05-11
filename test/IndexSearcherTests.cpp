@@ -48,8 +48,10 @@ void should_return_union_set(){
 void setUp(){
 	ofstream vocabulary("vocabulary");
 	ofstream index("index");
+	ofstream urls("urls");
 	vocabulary.close();
 	index.close();
+	urls.close();
 }
 
 void tearDown(){

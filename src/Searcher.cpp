@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "IndexSearcher.h"
+#include "VSMIndexSearcher.h"
 #include "Pair.h"
 #include "Doc.h"
 
@@ -26,9 +27,9 @@ int main(int argc, char* argv[]){
 		}
 	}
 	cout << "Loading index..." << endl;
-	IndexSearcher searcher(directory);
+	VSMIndexSearcher searcher(directory);
 	SequenceFile<Doc>* pagesFile = new SequenceFile<Doc>(directory + "/urls", false);
-	while(pagesFile->hasNext()){
+	while(pagesFile->hasNext()) {
 		cout << pagesFile->getPosition() << " = " << pagesFile->read().url << endl;
 	}
 	
@@ -37,20 +38,17 @@ int main(int argc, char* argv[]){
 	cout << "Type you query (and press ENTER): ";
 	getline(cin, query);
 	while(query != "sair"){
-		vector<Pair> hits = searcher.search(query);
+		vector<Doc> hits = searcher.search(query);
 		if(hits.size() == 0){
-			cout << endl << "Documents not found for your query. Try again." << endl << endl;
+			cout << endl << "Documents not found for your query. Try again." << endl;
 		} else {
 			cout << "Search results for: " << query << endl;
-			vector<Pair>::iterator it = hits.begin();
+			vector<Doc>::iterator it = hits.begin();
 			for(; it != hits.end(); it++){
-				pagesFile->setPosition(it->docId-1);
-				Doc d = pagesFile->read();
-				cout << " -> " << it->docId << " - ";
-				cout << d.url << endl;
+				cout << " -> " << it->id << "(" << it->length << ")" << " - " << it->url << endl;
 			}
 		}
-		cout << "Type you query (and press ENTER): ";
+		cout << endl << "Type you query (and press ENTER): ";
 		getline(cin, query);
 	}
 	return 0;

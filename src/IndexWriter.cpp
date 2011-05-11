@@ -36,10 +36,11 @@ int IndexWriter::addDocument(Page& page){
 
 	map<string, int> termFrequencies;
 	docIdCounter++;
-	
+	int documentLength = 0;
 	while(tokenizer.hasNext()){ //para cada termo "indexável"
 		string t = tokenizer.nextToken();
 		termFrequencies[t]++; //contabilizar frequencia do termo neste doc
+		documentLength++;
 	}
 	
 	map<string, int>::iterator it = termFrequencies.begin();
@@ -50,10 +51,10 @@ int IndexWriter::addDocument(Page& page){
 		occurrencesFile->write(oc);
 		
 	}
-	Doc d(page.url);
-	pagesFile->write(d);
+	Doc doc(docIdCounter, page.url, documentLength);
+	pagesFile->write(doc);
 	
-	cout << docIdCounter << " - " << d.url << endl;
+	cout << doc.id << " - " << doc.url << endl;
 	
 	return docIdCounter;
 }
@@ -73,11 +74,11 @@ void IndexWriter::commit() {
 	invertedLists->close();
 	pagesFile->close();
 	
-	pagesFile->reopen();
-	while(pagesFile->hasNext()){
-		cout << pagesFile->getPosition() << " = " << pagesFile->read().url << endl;
-	}
-	pagesFile->close();
+//	pagesFile->reopen();
+//	while(pagesFile->hasNext()){
+//		cout << pagesFile->getPosition() << " = " << pagesFile->read().url << endl;
+//	}
+//	pagesFile->close();
 
 	cout << "Done." << endl;
 }

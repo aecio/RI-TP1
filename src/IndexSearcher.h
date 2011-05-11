@@ -15,10 +15,12 @@
 #include "Pair.h"
 #include "Vocabulary.h"
 #include "TextTokenizer.h"
+#include "Doc.h"
 
 class IndexSearcher {
 	Vocabulary* vocabulary;
 	SequenceFile<Pair>* invertedLists;
+	SequenceFile<Doc>* pagesFile;
 public:
 	
 	enum{AND, OR};
@@ -26,21 +28,41 @@ public:
 	IndexSearcher(string directory) {
 		vocabulary = new Vocabulary(directory + "/vocabulary");
 		invertedLists = new SequenceFile<Pair>(directory + "/index", false);
+		pagesFile = new SequenceFile<Doc>(directory + "/urls", false);
 	}
 	
-	vector<Pair> singleQuery(Term* term){
-		vector<Pair> hits;
+	vector<Doc> readDocs(Pair* pairs, int n){
+		vector<Doc> docs;
+		for(int i=0; i < n; i++){
+			pagesFile->setPosition(pairs[i].docId-1);
+			Doc d = pagesFile->read();
+			docs.push_back(d);
+		}
+		return docs;
+	}
+	
+	vector<Doc> readDocs(vector<Pair> pairs){
+		vector<Doc> docs;
+		for(unsigned int i=0; i < pairs.size(); i++){
+			pagesFile->setPosition(pairs[i].docId-1);
+			Doc d = pagesFile->read();
+			docs.push_back(d);
+		}
+		return docs;
+	}
+	
+	
+	vector<Doc> singleQuery(Term* term){
+		vector<Doc> hits;
 		if(term != NULL) {
 			Pair* pairs = readInvertedList(term);
-			for(int i=0; i < term->docFrequency; i++){
-				hits.push_back(pairs[i]);
-			}
+			hits = readDocs(pairs, term->docFrequency);
 		}
 		return hits;
 	}
 	
-	vector<Pair> doubleQuery(Term* term1, Term* term2, int conector){
-		vector<Pair> hits;
+	vector<Doc> doubleQuery(Term* term1, Term* term2, int conector){
+		vector<Doc> hits;
 		if(conector == AND && (term1 == NULL || term2 == NULL ) )
 			return hits;
 			
@@ -55,16 +77,18 @@ public:
 		Pair* pairs2 = readInvertedList(term2);
 	
 		if(conector == AND) {
-			hits = intersectionSet( pairs1, term1->docFrequency,
-									pairs2, term2->docFrequency);
+			vector<Pair> result = intersectionSet( pairs1, term1->docFrequency,
+													pairs2, term2->docFrequency);
+			hits = readDocs(result);
 		} else {
-			hits = unionSet(pairs1, term1->docFrequency,
-							pairs2, term2->docFrequency);
+			vector<Pair> result = unionSet( pairs1, term1->docFrequency,
+					 						pairs2, term2->docFrequency);
+			hits = readDocs(result);
 		}
 		return hits;
 	}
 	
-	vector<Pair> search(string query) {
+	vector<Doc> search(string query) {
 		TextTokenizer tokenizer(query);
 		int conector;
 		vector<string> tokens;
@@ -115,8 +139,8 @@ public:
 						  Pair* set2start, int set2size ){
 		vector<Pair> unionset(set1size+set2size);
 		vector<Pair>::iterator end = set_union(	set1start, set1start+set1size,
-														set2start, set2start+set2size,
-														unionset.begin() );
+												set2start, set2start+set2size,
+												unionset.begin() );
 		vector<Pair> resultSet;
 		vector<Pair>::iterator it = unionset.begin();
 		for(;it != end; it++) {

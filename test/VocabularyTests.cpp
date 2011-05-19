@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <assert.h>
-#include "Vocabulary.h"
+#include "index/Vocabulary.h"
 
 #define VOCABULARY_TEST_FILE "indice_test/vocabulary"
 

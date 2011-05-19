@@ -13,12 +13,12 @@
 #include <string>
 #include <map>
 #include <list>
-#include "Occurrence.h"
-#include "SequenceFile.h"
-#include "Vocabulary.h"
-#include "Pair.h"
-#include "Page.h"
-#include "Doc.h"
+#include "index/Occurrence.h"
+#include "index/Vocabulary.h"
+#include "index/Pair.h"
+#include "index/Doc.h"
+#include "util/SequenceFile.h"
+#include "util/Page.h"
 
 using namespace std;
 	

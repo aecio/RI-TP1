@@ -8,16 +8,16 @@
 #ifndef VSMINDEXSEARCHER_H_
 #define VSMINDEXSEARCHER_H_
 
-#include <string>
-#include <vector>
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <vector>
 #include <queue>
-#include "SequenceFile.h"
-#include "Pair.h"
-#include "Vocabulary.h"
-#include "TextTokenizer.h"
-#include "Hit.h"
+#include "index/Pair.h"
+#include "index/Vocabulary.h"
+#include "search/Hit.h"
+#include "textanalysis/TextTokenizer.h"
+#include "util/SequenceFile.h"
 
 class VSMIndexSearcher {
 
@@ -48,8 +48,11 @@ public:
 		for(;it != tokens.end(); it++){
 			Term* term = vocabulary->findTerm(*it);
 			//TODO: se não encontar o termo? (term == NULL)
+			if(term == NULL){
+				continue;
+			}
 
-			double wt = 1 + log( numDocs/term->docFrequency );
+			double wt = 1 + log( numDocs/term->docFrequency ); // deixar pre-computado no índice
 			
 			Pair* invertedList = readInvertedList(term);
 			
@@ -82,13 +85,10 @@ public:
 			ac->second = ac->second / doc.length;
 			
 			Hit hit(ac->second, doc);
-//			cout << "score: " << hit.score << " url: " << hit.doc.url << endl;
 			topDocs.push(hit);
 			
 			ac++;
 		}
-		
-//		cout << endl << "demais docs..." << endl;
 		
 		for(; ac != accumulators.end(); ac++){
 			int docId = ac->first;
@@ -98,7 +98,6 @@ public:
 			ac->second = ac->second / doc.length;
 			
 			Hit hit(ac->second, doc);
-			cout << "score: " << hit.score << " url: " << hit.doc.url << endl;
 			if(topDocs.top() > hit){
 				topDocs.pop();
 				topDocs.push(hit);
@@ -109,11 +108,12 @@ public:
 		vector<Doc> result;
 		while( !topDocs.empty() ){
 			Hit hit = topDocs.top();
-//			cout << "score: " << hit.score << " url: " << hit.doc.url << endl;
+			cout << "score: " << hit.score << " url: " << hit.doc.url << endl;
 			result.push_back(hit.doc);
 			topDocs.pop();
 		}
 		reverse(result.begin(), result.end());
+		
 		return result;
 	}
 	

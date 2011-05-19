@@ -1,12 +1,11 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
-#include <algorithm>
 #include <zlib.h>
-#include "CollectionReader.h"
-#include "Document.h"
-#include "TextTokenizer.h"
-#include "IndexWriter.h"
-#include "Page.h"
+#include "../riCode/CollectionReader.h"
+#include "../riCode/Document.h"
+#include "index/IndexWriter.h"
+#include "util/Page.h"
 
 #define MAX_DOCS 99999999
 #define RUN_SIZE 200000

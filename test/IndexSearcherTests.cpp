@@ -6,7 +6,7 @@
 #include <vector>
 #include <assert.h>
 #include <iostream>
-#include "IndexSearcher.h"
+#include "search/BooleanSearcher.h"
 
 using namespace std;
 

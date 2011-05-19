@@ -8,14 +8,14 @@
 #ifndef INDEXSEARCHER_H_
 #define INDEXSEARCHER_H_
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include "SequenceFile.h"
-#include "Pair.h"
-#include "Vocabulary.h"
-#include "TextTokenizer.h"
-#include "Doc.h"
+#include "index/Pair.h"
+#include "index/Vocabulary.h"
+#include "index/Doc.h"
+#include "textanalysis/TextTokenizer.h"
+#include "util/SequenceFile.h"
 
 class IndexSearcher {
 	Vocabulary* vocabulary;

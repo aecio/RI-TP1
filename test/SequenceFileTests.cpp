@@ -7,8 +7,8 @@
 #include <iostream>
 #include <vector>
 #include <assert.h>
-#include "Occurrence.h"
-#include "SequenceFile.h"
+#include "index/Occurrence.h"
+#include "util/SequenceFile.h"
 
 #define SEQUENCE_TEST_FILE "indice_test/sequencefile.test"
 

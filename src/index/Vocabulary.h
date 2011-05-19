@@ -8,12 +8,12 @@
 #ifndef VOCABULARY_H_
 #define VOCABULARY_H_
 
+#include <algorithm>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <algorithm>
-#include "Term.h"
-#include "SequenceFile.h"
+#include "index/Term.h"
+#include "util/SequenceFile.h"
 
 using namespace std;
 
@@ -85,6 +85,7 @@ public:
 		SequenceFile<Term> sf(fileName);
 		vector<Term>::iterator it = terms.begin();
 		for(; it != terms.end(); it++){
+//			cout << it->term << endl;
 			sf.write(*it);
 		}
 		sf.close();

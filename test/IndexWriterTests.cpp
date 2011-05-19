@@ -3,14 +3,14 @@
  * @author: aeciosantos@dcc.ufmg.br
  */
 
+#include <assert.h>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-#include <assert.h>
-#include "Occurrence.h"
-#include "SequenceFile.h"
-#include "IndexWriter.h"
-#include "Pair.h"
+#include "index/IndexWriter.h"
+#include "index/Occurrence.h"
+#include "index/Pair.h"
+#include "util/SequenceFile.h"
 
 using namespace std;
 

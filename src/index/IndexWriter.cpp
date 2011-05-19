@@ -13,11 +13,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "textanalysis/TextTokenizer.h"
 #include "index/IndexWriter.h"
 #include "index/Pair.h"
-#include "index/Page.h"
-#include "index/SequenceFile.h"
-#include "textanalysis/TextTokenizer.h"
+#include "util/Page.h"
+#include "util/SequenceFile.h"
 
 using namespace std;
 	
@@ -217,13 +217,4 @@ void IndexWriter::merge2runs(SequenceFile<Occurrence>* runA,
 	
 	cout << "Finished merging "<< mergedFile->getName() <<" with " 
 		 << mergedFile->getSize() << " entries." << endl << endl;
-}
-
-void IndexWriter::printOccurence(Occurrence& it){
-		cout << it.termId;
-		cout << ' ';
-		cout << it.docId;
-		cout << ' ';
-		cout << it.termFrequencyInDoc;
-		cout << '\n';
 }

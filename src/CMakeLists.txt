@@ -1,30 +1,41 @@
-# CmakeLists.txt in src dir
-
 INCLUDE_DIRECTORIES(${TP1_SOURCE_DIR}/riCode)
+INCLUDE_DIRECTORIES(${TP1_SOURCE_DIR}/src)
 
-ADD_EXECUTABLE(	indexer Main.cpp 
-				TextTokenizer.h TextTokenizer.cpp
-				IndexWriter.h IndexWriter.cpp
-				Term.h
-				Pair.h
-				Vocabulary.h
-				SequenceFile.h
-				VSMIndexSearcher.h)
+ADD_SUBDIRECTORY(index)
+ADD_SUBDIRECTORY(search)
+ADD_SUBDIRECTORY(textanalysis)
+
+ADD_EXECUTABLE(	indexer Indexer.cpp 
+				textanalysis/TextTokenizer.h
+				textanalysis/TextTokenizer.cpp
+				index/IndexWriter.h
+				index/IndexWriter.cpp
+				index/Term.h
+				index/Pair.h
+				index/Vocabulary.h
+				util/SequenceFile.h
+				util/Page.h)
 				
 ADD_EXECUTABLE(	searcher Searcher.cpp
-				Pair.h
-				Vocabulary.h
-				SequenceFile.h
-				TextTokenizer.h TextTokenizer.cpp
-				VSMIndexSearcher.h)
+				index/Pair.h
+				index/Vocabulary.h
+				textanalysis/TextTokenizer.h
+				textanalysis/TextTokenizer.cpp
+				search/VSMIndexSearcher.h
+				search/BooleanSearcher.h
+				util/SequenceFile.h)
 				
-ADD_LIBRARY(TP1 TextTokenizer.h TextTokenizer.cpp
-				IndexWriter.h IndexWriter.cpp
-				Term.h
-				Pair.h
-				Vocabulary.h
-				SequenceFile.h
-				VSMIndexSearcher.h)
+ADD_LIBRARY(TP1 textanalysis/TextTokenizer.h
+				textanalysis/TextTokenizer.cpp
+				index/IndexWriter.h
+				index/IndexWriter.cpp
+				index/Term.h
+				index/Pair.h
+				index/Vocabulary.h
+				search/VSMIndexSearcher.h
+				search/BooleanSearcher.h
+				util/Page.h
+				util/SequenceFile.h)
 				
 				
 

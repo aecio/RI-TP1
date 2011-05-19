@@ -11,6 +11,7 @@
 #include <string>
 #include <htmlcxx/html/Node.h>
 #include <htmlcxx/html/ParserDom.h>
+#include <htmlcxx/html/utils.h>
 
 using namespace std;
 using namespace htmlcxx;
@@ -40,7 +41,8 @@ public:
 				text += it->text();
 			}
 		}
-		return text;
+		return HTML::decode_entities(text);
+//		return text;
 	}
 	
 	

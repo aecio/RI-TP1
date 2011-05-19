@@ -8,7 +8,7 @@
 #ifndef HIT_H_
 #define HIT_H_
 
-#include "Doc.h"
+#include "index/Doc.h"
 
 class Hit {
 public:

@@ -31,6 +31,7 @@ class IndexWriter {
 	
 	int docIdCounter;
 	int termIdCounter;
+	double averageDocLength;
 	
 	SequenceFile<Occurrence>* occurrencesFile;
 	SequenceFile<Doc>* pagesFile;

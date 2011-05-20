@@ -9,6 +9,8 @@
 #include <vector>
 #include "search/BooleanSearcher.h"
 #include "search/VSMIndexSearcher.h"
+#include "search/BM25IndexSearcher.h"
+#include "search/Hit.h"
 #include "index/Pair.h"
 #include "index/Doc.h"
 
@@ -28,28 +30,25 @@ int main(int argc, char* argv[]){
 	}
 	cout << "Loading index..." << endl;
 	VSMIndexSearcher searcher(directory);
-	
-//	SequenceFile<Doc>* pagesFile = new SequenceFile<Doc>(directory + "/urls", false);
-//	while(pagesFile->hasNext()) {
-//		cout << pagesFile->getPosition() << " = " << pagesFile->read().url << endl;
-//	}
+//	BM25IndexSearcher searcher(directory);
 	
 	string query;
 	cout << "Type you query (and press ENTER): ";
 	getline(cin, query);
 	while(query != "sair"){
-		vector<Doc> hits = searcher.search(query);
+		vector<Hit> hits = searcher.search(query, 20);
 		
 		if(hits.size() == 0){
 			cout << endl << "Documents not found for your query. Try again." << endl;
 		} else {
 			cout << "Search results for: " << query << endl;
-			vector<Doc>::iterator it = hits.begin();
+			vector<Hit>::iterator it = hits.begin();
 			for(; it != hits.end(); it++){
 				cout << endl;
-				cout << "(" << it->id  << ") - " << it->url << endl;
-				cout << "score: " << "0.0000" << endl;
-				cout 		<< "length: " << it->length << endl;
+				cout << it->doc.url << endl;
+				cout << "score: " << it->score << endl;
+				cout << "docId: " << it->doc.id << endl;
+				cout << "length: " << it->doc.length << endl;
 			}
 		}
 		cout << endl << "Type you query (and press ENTER): ";

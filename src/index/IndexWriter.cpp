@@ -26,6 +26,7 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	directory = directory_;
 	docIdCounter = 0;
 	termIdCounter = 0;
+	averageDocLength = 0;
 	occurrencesFile = new SequenceFile<Occurrence>(directory + "/occurrences");
 	pagesFile = new SequenceFile<Doc>(directory + "/urls");
 }
@@ -53,8 +54,9 @@ int IndexWriter::addDocument(Page& page){
 	}
 	Doc doc(docIdCounter, page.url, documentLength);
 	pagesFile->write(doc);
+	averageDocLength += documentLength;
 	
-	cout << doc.id << " - " << doc.url << endl;
+//	cout << doc.id << " - " << doc.url << endl;
 	
 	return docIdCounter;
 }
@@ -73,6 +75,13 @@ void IndexWriter::commit() {
 	
 	invertedLists->close();
 	pagesFile->close();
+	
+	SequenceFile<double>* avgdoclen = new SequenceFile<double>(directory + "/avgdoclen");
+	double average = averageDocLength / docIdCounter;
+	avgdoclen->write(average);
+	avgdoclen->close();
+	
+	cout << "Average document length: " << average << endl;
 	
 //	pagesFile->reopen();
 //	while(pagesFile->hasNext()){

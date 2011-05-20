@@ -33,31 +33,32 @@ public:
 		pagesFile = new SequenceFile<Doc>(directory + "/urls", false);
 	}
 	
-	vector<Doc> search(string query) {
+	vector<Hit> search(string query, int maxHits) {
 		TextTokenizer tokenizer(query);
 
+		//Query parsing...
 		vector<string> tokens;
 		while(tokenizer.hasNext()) {
 			tokens.push_back(tokenizer.nextToken());
 		}
 		
+		//Score calculus
 		map<int, double> accumulators;
 		int numDocs = pagesFile->getSize();
 		
 		vector<string>::iterator it = tokens.begin();
 		for(;it != tokens.end(); it++){
 			Term* term = vocabulary->findTerm(*it);
-			//TODO: se não encontar o termo? (term == NULL)
-			if(term == NULL){
-				continue;
-			}
 
-			double wt = 1 + log( numDocs/term->docFrequency ); // deixar pre-computado no índice
+			if(term == NULL)
+				continue;
+			
+			double wt = 1 + log( numDocs/term->docFrequency ); // deixar pré-computado no índice?
 			
 			Pair* invertedList = readInvertedList(term);
 			
 			for(int i=0; i<term->docFrequency; i++){
-				double valor;
+				double valor;//normalization
 				map<int, double>::iterator value = accumulators.find(invertedList[i].docId);
 				if(value == accumulators.end() ){
 					accumulators[invertedList[i].docId] = 0;
@@ -67,54 +68,43 @@ public:
 				}
 				valor += log(1+ invertedList[i].frequency_dt) * wt;
 				accumulators[invertedList[i].docId] = valor;
-				cout << valor << endl;
 			}
 		}
 		
 		
-		//pra cada acumulador, normalizar score pelo tamanho do documento
-		
+		//Document length normatization and TopDocs selection
 		priority_queue< Hit, vector<Hit>, greater<Hit> > topDocs;
-		
+
 		map<int, double>::iterator ac = accumulators.begin();
-		for(int i=0; i<10 && ac != accumulators.end(); i++){
-			int docId = ac->first;
-			pagesFile->setPosition(docId-1);
-			Doc doc = pagesFile->read();
-			
-			ac->second = ac->second / doc.length;
-			
-			Hit hit(ac->second, doc);
+		
+		for(int i=0; i < maxHits && ac != accumulators.end(); i++, ac++){
+			Hit hit = createHit(ac->first, ac->second);
 			topDocs.push(hit);
-			
-			ac++;
 		}
 		
 		for(; ac != accumulators.end(); ac++){
-			int docId = ac->first;
-			pagesFile->setPosition(docId-1);
-			Doc doc = pagesFile->read();
-			
-			ac->second = ac->second / doc.length;
-			
-			Hit hit(ac->second, doc);
-			if(topDocs.top() > hit){
+			Hit hit = createHit(ac->first, ac->second);
+			if(topDocs.top() < hit){
 				topDocs.pop();
 				topDocs.push(hit);
 			}
 		}
 		
-		cout << "TopDocs" << endl;
-		vector<Doc> result;
+		vector<Hit> result;
 		while( !topDocs.empty() ){
-			Hit hit = topDocs.top();
-			cout << "score: " << hit.score << " url: " << hit.doc.url << endl;
-			result.push_back(hit.doc);
+			result.push_back(topDocs.top());
 			topDocs.pop();
 		}
 		reverse(result.begin(), result.end());
 		
 		return result;
+	}
+	
+	Hit createHit(int docId, double score){
+		pagesFile->setPosition(docId-1);
+		Doc doc = pagesFile->read();
+		score = score / doc.length;	//document length normalization
+		return Hit(score, doc);
 	}
 	
 	Pair* readInvertedList(Term* term){

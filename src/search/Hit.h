@@ -15,7 +15,9 @@ public:
 	double score;
 	Doc doc;
 
-	Hit() {}
+	Hit() {
+		score = 0.0;
+	}
 	
 	Hit(double score_, Doc document){
 		score = score_;

@@ -8,7 +8,7 @@
 #include "util/Page.h"
 
 #define MAX_DOCS 99999999
-#define RUN_SIZE 200000
+#define RUN_SIZE 1000000
 
 using namespace std;
 using namespace RICPNS;	

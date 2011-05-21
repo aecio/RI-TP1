@@ -4,10 +4,12 @@
  *  Created on: 18/04/2011
  *      Author: aecio
  */
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
-#include "search/BooleanSearcher.h"
+#include "search/IndexSearcher.h"
+#include "search/BooleanIndexSearcher.h"
 #include "search/VSMIndexSearcher.h"
 #include "search/BM25IndexSearcher.h"
 #include "search/Hit.h"
@@ -17,8 +19,12 @@
 using namespace std;
 
 int main(int argc, char* argv[]){
+	enum IRModel {BM25, VECTOR, BOOLEAN};
 	
+	int maxHits = 10;
 	string directory = ".";
+	IndexSearcher* searcher;
+	IRModel model = BM25;
 	
 	//Parse comand line arguments
 	for(int i=0; i<argc; i++){
@@ -27,16 +33,38 @@ int main(int argc, char* argv[]){
 			i++;
 			directory = string(argv[i]);
 		}
+		if(param == "--model" || param == "-m"){
+			i++;
+			string modelStr(argv[i]);
+			if(modelStr == "vector" || modelStr == "Vector" )
+				model = VECTOR;
+			else if(modelStr == "bm25" || modelStr == "BM25")
+				model = BM25;
+		}
+		if(param == "--maxHits" || param == "-h"){
+			i++;
+			maxHits = atoi(argv[i]);
+		}
 	}
-	cout << "Loading index..." << endl;
-	VSMIndexSearcher searcher(directory);
-//	BM25IndexSearcher searcher(directory);
+	
+	cout << "Loading index...";
+	switch(model){
+		case VECTOR:
+			cout << "(using Vector Spacel Model)" << endl;
+			searcher = new VSMIndexSearcher(directory);
+			break;
+		case BM25:
+		default:
+			cout << "(using BM25 Model)" << endl;
+			searcher = new BM25IndexSearcher(directory);
+			break;
+	}
 	
 	string query;
 	cout << "Type you query (and press ENTER): ";
 	getline(cin, query);
 	while(query != "sair"){
-		vector<Hit> hits = searcher.search(query, 20);
+		vector<Hit> hits = searcher->search(query, maxHits);
 		
 		if(hits.size() == 0){
 			cout << endl << "Documents not found for your query. Try again." << endl;
@@ -46,11 +74,12 @@ int main(int argc, char* argv[]){
 			for(; it != hits.end(); it++){
 				cout << endl;
 				cout << it->doc.url << endl;
-				cout << "score: " << it->score << endl;
-				cout << "docId: " << it->doc.id << endl;
-				cout << "length: " << it->doc.length << endl;
+				cout << "score: " << it->score << "\t";
+				cout << "docId: " << it->doc.id << "\t"; 
+				cout << "docLength: " << it->doc.length << endl;
 			}
 		}
+		cout << "___________________________________________" << endl;
 		cout << endl << "Type you query (and press ENTER): ";
 		getline(cin, query);
 	}

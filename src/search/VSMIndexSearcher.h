@@ -16,21 +16,25 @@
 #include "index/Pair.h"
 #include "index/Vocabulary.h"
 #include "search/Hit.h"
+#include "search/IndexReader.h"
 #include "textanalysis/TextTokenizer.h"
 #include "util/SequenceFile.h"
 
-class VSMIndexSearcher {
+class VSMIndexSearcher : public IndexSearcher {
 
-	Vocabulary* vocabulary;
-	SequenceFile<Pair>* invertedLists;
-	SequenceFile<Doc>* pagesFile;
+	IndexReader* indexReader;
 	
 public:
 
 	VSMIndexSearcher(string directory) {
-		vocabulary = new Vocabulary(directory + "/vocabulary");
-		invertedLists = new SequenceFile<Pair>(directory + "/index", false);
-		pagesFile = new SequenceFile<Doc>(directory + "/urls", false);
+		indexReader = new IndexReader(directory);
+	}
+	~VSMIndexSearcher(){
+		delete indexReader;
+	}
+	
+	vector<Hit> search(string query) {
+		return search(query, 10);
 	}
 	
 	vector<Hit> search(string query, int maxHits) {
@@ -43,31 +47,31 @@ public:
 		}
 		
 		//Score calculus
-		map<int, double> accumulators;
-		int numDocs = pagesFile->getSize();
+		map<int, Hit> accumulators;
+		int numDocs = indexReader->getCollectionSize();
 		
 		vector<string>::iterator it = tokens.begin();
 		for(;it != tokens.end(); it++){
-			Term* term = vocabulary->findTerm(*it);
 
+			Term* term = indexReader->getTerm(*it);
 			if(term == NULL)
 				continue;
 			
 			double wt = 1 + log( numDocs/term->docFrequency ); // deixar pré-computado no índice?
 			
-			Pair* invertedList = readInvertedList(term);
+			Pair* invertedList = indexReader->getInvertedList(term);
 			
 			for(int i=0; i<term->docFrequency; i++){
-				double valor;//normalization
-				map<int, double>::iterator value = accumulators.find(invertedList[i].docId);
+				Hit accumulator;
+				map<int, Hit>::iterator value = accumulators.find(invertedList[i].docId);
 				if(value == accumulators.end() ){
-					accumulators[invertedList[i].docId] = 0;
-					valor = accumulators[invertedList[i].docId];
+					accumulator = accumulators[invertedList[i].docId];
+					accumulator.doc = indexReader->getDoc(invertedList[i].docId);
 				}else{
-					valor = value->second;
+					accumulator = value->second;
 				}
-				valor += log(1+ invertedList[i].frequency_dt) * wt;
-				accumulators[invertedList[i].docId] = valor;
+				accumulator.score += log(1+ invertedList[i].frequency_dt) * wt;
+				accumulators[invertedList[i].docId] = accumulator;
 			}
 		}
 		
@@ -75,18 +79,18 @@ public:
 		//Document length normatization and TopDocs selection
 		priority_queue< Hit, vector<Hit>, greater<Hit> > topDocs;
 
-		map<int, double>::iterator ac = accumulators.begin();
+		map<int, Hit>::iterator ac = accumulators.begin();
 		
 		for(int i=0; i < maxHits && ac != accumulators.end(); i++, ac++){
-			Hit hit = createHit(ac->first, ac->second);
-			topDocs.push(hit);
+			ac->second.score = ac->second.score / ac->second.doc.length; //document length normalization
+			topDocs.push(ac->second);
 		}
 		
 		for(; ac != accumulators.end(); ac++){
-			Hit hit = createHit(ac->first, ac->second);
-			if(topDocs.top() < hit){
+			ac->second.score = ac->second.score / ac->second.doc.length; //document length normalization
+			if(topDocs.top() < ac->second ){
 				topDocs.pop();
-				topDocs.push(hit);
+				topDocs.push(ac->second);
 			}
 		}
 		
@@ -98,20 +102,6 @@ public:
 		reverse(result.begin(), result.end());
 		
 		return result;
-	}
-	
-	Hit createHit(int docId, double score){
-		pagesFile->setPosition(docId-1);
-		Doc doc = pagesFile->read();
-		score = score / doc.length;	//document length normalization
-		return Hit(score, doc);
-	}
-	
-	Pair* readInvertedList(Term* term){
-		Pair* pairs = new Pair[term->docFrequency];
-		invertedLists->setPosition(term->listPosition);
-		invertedLists->readBlock(pairs, term->docFrequency);
-		return pairs;
 	}
 	
 };

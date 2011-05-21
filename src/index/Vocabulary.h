@@ -36,6 +36,7 @@ public:
 			int& id = vocabulary[string(term.term)];
 			id = vocabulary.size()-1;
 		}
+		sf.close();
 	}
 	
 	int addTerm(string termStr){

@@ -1,19 +1,19 @@
 /**
- * Tests the IndexSearcher class
+ * Tests the BooleanIndexSearcher class
  * @author: aeciosantos@dcc.ufmg.br
  */
 
 #include <vector>
 #include <assert.h>
 #include <iostream>
-#include "search/BooleanSearcher.h"
+#include "search/BooleanIndexSearcher.h"
 
 using namespace std;
 
 void should_return_instersection_set(){
 	cout << ">>> should_return_instersection_set" << endl;
 	//given
-	IndexSearcher* is = new IndexSearcher(".");
+	BooleanIndexSearcher* is = new BooleanIndexSearcher(".");
 	Pair first[] = {Pair(1,1), Pair(2,2), Pair(3,3), Pair(4,4)};
 	Pair second[] = {Pair(2,2), Pair(4,4)};
 
@@ -30,7 +30,7 @@ void should_return_union_set(){
 	cout << ">>> should_return_union_set" << endl;
 	
 	//given
-	IndexSearcher* is = new IndexSearcher(".");
+	BooleanIndexSearcher* is = new BooleanIndexSearcher(".");
 	Pair first[] = {Pair(1,1), Pair(3,3), Pair(4,4)};
 	Pair second[] = {Pair(2,2), Pair(4,4)};
 
@@ -61,7 +61,7 @@ void tearDown(){
 
 void indexsearcher_test_cases() {
 	cout << "--------------------" << endl;
-	cout << "IndexSearcher Tests" << endl;
+	cout << "BooleanIndexSearcher Tests" << endl;
 	cout << "--------------------" << endl;
 	
 	setUp();

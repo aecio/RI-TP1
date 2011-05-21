@@ -5,8 +5,8 @@
  *      Author: aecio
  */
 
-#ifndef INDEXSEARCHER_H_
-#define INDEXSEARCHER_H_
+#ifndef BOOLEANINDEXSEARCHER_H_
+#define BOOLEANINDEXSEARCHER_H_
 
 #include <algorithm>
 #include <string>
@@ -17,7 +17,7 @@
 #include "textanalysis/TextTokenizer.h"
 #include "util/SequenceFile.h"
 
-class IndexSearcher {
+class BooleanIndexSearcher {
 	Vocabulary* vocabulary;
 	SequenceFile<Pair>* invertedLists;
 	SequenceFile<Doc>* pagesFile;
@@ -25,7 +25,7 @@ public:
 	
 	enum{AND, OR};
 
-	IndexSearcher(string directory) {
+	BooleanIndexSearcher(string directory) {
 		vocabulary = new Vocabulary(directory + "/vocabulary");
 		invertedLists = new SequenceFile<Pair>(directory + "/index", false);
 		pagesFile = new SequenceFile<Doc>(directory + "/urls", false);
@@ -151,4 +151,4 @@ public:
 	
 };
 
-#endif /* PAIR_H_ */
+#endif /* BOOLEANINDEXSEARCHER_H_ */

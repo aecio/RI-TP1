@@ -37,7 +37,6 @@ class IndexWriter {
 	SequenceFile<Doc>* pagesFile;
 	
 	string extractTextFrom(string& html);
-	void printOccurence(Occurrence& it);
 	
 public:
 	IndexWriter(string directory, int runSize = 500000);

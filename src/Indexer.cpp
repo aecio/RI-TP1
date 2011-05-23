@@ -62,12 +62,12 @@ int main(int argc, char* argv[]){
 		docsIndexed++;
 		
 		if(docsIndexed % 10000 == 0) {
-			cout <<	docsIndexed << " documents..." << endl;
+			cout <<	docsIndexed << " documents indexed..." << endl;
 		}
 		
 		Page p(doc.getURL(), doc.getText());
 		iw->addDocument(p);
-
+		
 		doc.clear();
 	}
 	iw->commit();

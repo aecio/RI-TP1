@@ -138,17 +138,14 @@ void should_create_inverted_file_correctly(){
 	//term1
 	p = index->read();
 	assert(p.docId == 1);
-	cout << p.frequency_dt << endl; 
 	assert(p.frequency_dt == 1);
 	
 	p = index->read();
 	assert(p.docId == 2);
-	cout << p.frequency_dt << endl; 
 	assert(p.frequency_dt == 1);
 	
 	p = index->read();
 	assert(p.docId == 3);
-	cout << p.frequency_dt << endl; 
 	assert(p.frequency_dt == 3);
 	
 	//term2

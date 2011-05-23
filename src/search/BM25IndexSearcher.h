@@ -35,6 +35,8 @@ public:
 	}
 	
 	vector<Hit> search(string query, int maxHits) {
+		cout << "Searching term \"" << query << "\"..." << endl;
+		
 		//###
 		clock_t init_search = clock();
 		//###
@@ -44,7 +46,9 @@ public:
 		//Query parsing...
 		vector<string> tokens;
 		while(tokenizer.hasNext()) {
-			tokens.push_back(tokenizer.nextToken());
+			string t = tokenizer.nextToken();
+			tokens.push_back(t);
+			cout << t << endl;
 		}
 		
 		//Defining constants
@@ -64,6 +68,8 @@ public:
 			if(term == NULL)
 				continue;
 
+			cout << "Searching documents containing term \"" << term->term << "\"..." << endl;			
+			
 			int ni = term->docFrequency; // ni = numero de docs que contem termo k_i
 			double probabilisticFactor = log( ( N - ni + 0.5 )/(ni + 0.5) );
 			
@@ -133,7 +139,7 @@ public:
 		//###
 		clock_t end_search = clock();
 		double total_time = ((double)(end_search-init_search)) / (double) (CLOCKS_PER_SEC/1000);
-		printf("Search executed in %.0f ms\n", total_time);
+		printf("Search executed in %.0f ms\n\n", total_time);
 		//###
 		return result;
 	}

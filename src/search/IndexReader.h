@@ -41,7 +41,10 @@ public:
 	}
 	
 	Term* getTerm(string word){
-		return vocabulary->findTerm(word);
+		cout << "Finding term " << word << endl;
+		Term* t = vocabulary->findTerm(word);
+		cout << "Term found " << t->term << endl;
+		return t;
 	}
 
 	Pair* getInvertedList(Term* term){

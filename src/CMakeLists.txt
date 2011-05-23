@@ -1,5 +1,6 @@
 INCLUDE_DIRECTORIES(${TP1_SOURCE_DIR}/riCode)
 INCLUDE_DIRECTORIES(${TP1_SOURCE_DIR}/src)
+INCLUDE_DIRECTORIES(/usr/local/include/Wt)
 
 ADD_SUBDIRECTORY(index)
 ADD_SUBDIRECTORY(search)
@@ -22,7 +23,7 @@ ADD_EXECUTABLE(	searcher Searcher.cpp
 				textanalysis/TextTokenizer.h
 				textanalysis/TextTokenizer.cpp
 				search/VSMIndexSearcher.h
-				search/BooleanSearcher.h
+				search/BooleanIndexSearcher.h
 				util/SequenceFile.h)
 				
 ADD_LIBRARY(TP1 textanalysis/TextTokenizer.h
@@ -33,10 +34,13 @@ ADD_LIBRARY(TP1 textanalysis/TextTokenizer.h
 				index/Pair.h
 				index/Vocabulary.h
 				search/VSMIndexSearcher.h
-				search/BooleanSearcher.h
+				search/BooleanIndexSearcher.h
 				util/Page.h
 				util/SequenceFile.h)
-				
-				
 
 TARGET_LINK_LIBRARIES(indexer z htmlcxx RICPlib)
+
+
+ADD_EXECUTABLE(	websearcher.wt WebSearcher.cpp)
+
+TARGET_LINK_LIBRARIES(websearcher.wt wt wthttp boost_signals TP1)

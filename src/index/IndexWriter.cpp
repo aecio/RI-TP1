@@ -32,26 +32,27 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 }
 	
 int IndexWriter::addDocument(Page& page){
+	docIdCounter++;
+	
 	string text = page.getPlainText();
 	TextTokenizer tokenizer(text);
 
-	map<string, int> termFrequencies;
-	docIdCounter++;
+	map<string, int> terms;
 	int documentLength = 0;
 	while(tokenizer.hasNext()){ //para cada termo "indexável"
 		string t = tokenizer.nextToken();
-		termFrequencies[t]++; //contabilizar frequencia do termo neste doc
+		terms[t]++; //contabilizar frequencia do termo neste doc
 		documentLength++;
 	}
 	
-	map<string, int>::iterator it = termFrequencies.begin();
-	for(; it != termFrequencies.end(); it++){
-		
+	map<string, int>::iterator it = terms.begin();
+	for(; it != terms.end(); it++){
 		int termId = vocabulary.addTerm(it->first);
+		
 		Occurrence oc(termId, docIdCounter, it->second);
 		occurrencesFile->write(oc);
-		
 	}
+	
 	Doc doc(docIdCounter, page.url, documentLength);
 	pagesFile->write(doc);
 	averageDocLength += documentLength;

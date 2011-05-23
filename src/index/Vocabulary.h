@@ -27,16 +27,16 @@ public:
 	
 	Vocabulary(string fileToOpen){
 		SequenceFile<Term> sf(fileToOpen, false);
-		
 		while(sf.hasNext()){
 			Term term = sf.read();
-
 			terms.push_back(term);
 			
 			int& id = vocabulary[string(term.term)];
-			id = vocabulary.size()-1;
+			id = terms.size();
 		}
 		sf.close();
+		
+		cout << "Tamanho do vocabulario: " << terms.size() << endl;
 	}
 	
 	int addTerm(string termStr){
@@ -48,7 +48,7 @@ public:
 			terms.push_back(term);
 			
 			int& id = vocabulary[termStr];
-			id = vocabulary.size();
+			id = terms.size();
 			
 			return id;
 		} else {
@@ -57,11 +57,13 @@ public:
 	}
 	
 	Term* findTerm(string termStr){
+		cout << "Vocabulary.findTerm(): " << termStr << endl;
 		map<string, int>::iterator it = vocabulary.find(termStr);
 		if(it == vocabulary.end() ){
 			return NULL;
 		} else {
-			Term* p = &terms[it->second];
+			Term* p = &terms[it->second-1];
+			cout << "term found: " << p->term << endl;
 			return p;
 		}
 	}
@@ -86,7 +88,6 @@ public:
 		SequenceFile<Term> sf(fileName);
 		vector<Term>::iterator it = terms.begin();
 		for(; it != terms.end(); it++){
-//			cout << it->term << endl;
 			sf.write(*it);
 		}
 		sf.close();

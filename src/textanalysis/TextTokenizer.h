@@ -9,11 +9,13 @@
 #define TEXTTOKENIZER_H_
 
 #include <string>
+#include "Stopwords.h"
 
 using namespace std;
 
 
 class TextTokenizer {
+	Stopwords* stopfile;
 	string text;
 	unsigned int tokenStart;
 	unsigned int currentChar;

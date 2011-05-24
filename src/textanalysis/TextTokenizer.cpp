@@ -2,12 +2,14 @@
 #include <iostream>
 #include <algorithm>
 #include "TextTokenizer.h"
-
+#include "Stopwords.h"
 
 using namespace std;
 
 TextTokenizer::TextTokenizer(string& text_){
+	stopfile = new Stopwords("stopwords");
 	text = text_;
+	std::transform(text.begin(), text.end(), text.begin(), ::tolower);
 	tokenStart = 0;
 	currentChar = 0;
 }
@@ -50,10 +52,14 @@ string TextTokenizer::nextToken(){
 			} while( isAlphaNum(ch) || isSpecialChar(ch) );
 			
 			token = text.substr(tokenStart, currentChar-tokenStart);
-			break;
+			
+			if(stopfile->isStopword(token))
+				continue;
+			else
+				break;
 		}
 		
 	}
-	std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+//	cout << token << endl;
 	return token;
 }

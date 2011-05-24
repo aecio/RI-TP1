@@ -9,6 +9,8 @@ ADD_SUBDIRECTORY(textanalysis)
 ADD_EXECUTABLE(	indexer Indexer.cpp 
 				textanalysis/TextTokenizer.h
 				textanalysis/TextTokenizer.cpp
+				textanalysis/Stopwords.h
+				textanalysis/Stopwords.cpp
 				index/IndexWriter.h
 				index/IndexWriter.cpp
 				index/Term.h
@@ -22,12 +24,16 @@ ADD_EXECUTABLE(	searcher Searcher.cpp
 				index/Vocabulary.h
 				textanalysis/TextTokenizer.h
 				textanalysis/TextTokenizer.cpp
+				textanalysis/Stopwords.h
+				textanalysis/Stopwords.cpp
 				search/VSMIndexSearcher.h
 				search/BooleanIndexSearcher.h
 				util/SequenceFile.h)
 				
 ADD_LIBRARY(TP1 textanalysis/TextTokenizer.h
 				textanalysis/TextTokenizer.cpp
+				textanalysis/Stopwords.h
+				textanalysis/Stopwords.cpp
 				index/IndexWriter.h
 				index/IndexWriter.cpp
 				index/Term.h

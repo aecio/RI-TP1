@@ -30,6 +30,10 @@ public:
 		indexReader = new IndexReader(directory);
 	}
 	
+	BM25IndexSearcher(IndexReader* ir) {
+		indexReader = ir;
+	}
+	
 	vector<Hit> search(string query) {
 		return search(query, 10);
 	}

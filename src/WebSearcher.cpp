@@ -13,6 +13,7 @@
 #include <search/IndexSearcher.h>
 #include <search/VSMIndexSearcher.h>
 #include <search/BM25IndexSearcher.h>
+#include <search/CombinedIndexSearcher.h>
 
 using namespace Wt;
 
@@ -22,9 +23,10 @@ public:
 	WebSearcher(const WEnvironment& env);
 	
 private:
-	enum IRModel { BM25 = 1, Vector = 2};
+	enum IRModel { BM25 = 1, Vector = 2, Combined = 3};
 	
 	IndexSearcher* searcher;
+	IndexReader* reader;
 	WButtonGroup* bgModel;
 	WLineEdit *edtQuery;
 	WGroupBox *gbxResults;		
@@ -32,6 +34,7 @@ private:
 	void search();
 	void btnVectorHandler();
 	void btnBM25Handler();
+	void btnMixedModelHandler();
 };
 
 WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
@@ -70,27 +73,44 @@ WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
 	button = new WRadioButton("Vector Space Model", container);
 	button->clicked().connect(this, &WebSearcher::btnVectorHandler);
 	bgModel->addButton(button, Vector);
+	
+	button = new WRadioButton("VSM and BM25 combined", container);
+	button->clicked().connect(this, &WebSearcher::btnMixedModelHandler);
+	bgModel->addButton(button, Combined);
 
 	bgModel->setCheckedButton(bgModel->button(BM25));
 	
+	reader = new IndexReader("indice");
+	
 	switch(bgModel->checkedId()){
 		case Vector:
-			searcher = new VSMIndexSearcher("indice");
+			searcher = new VSMIndexSearcher(reader);
+			break;
+		case Combined:
+			searcher = new CombinedIndexSearcher(reader);
 			break;
 		case BM25:
 		default:
-			searcher = new BM25IndexSearcher("indice");
+			searcher = new BM25IndexSearcher(reader);
 	}
 }
 
 void WebSearcher::btnVectorHandler(){
 	cout << "Changing model to: Vector Space Model." << endl;
-	searcher = new VSMIndexSearcher("indice");
+	delete searcher;
+	searcher = new VSMIndexSearcher(reader);
 }
 
 void WebSearcher::btnBM25Handler(){
 	cout << "Changing model to: BM25." << endl;
-	searcher = new BM25IndexSearcher("indice");
+	delete searcher;
+	searcher = new BM25IndexSearcher(reader);
+}
+
+void WebSearcher::btnMixedModelHandler(){
+	cout << "Changing model to: VSM & BM25 Combined." << endl;
+	delete searcher;
+	searcher = new CombinedIndexSearcher(reader);
 }
 
 void WebSearcher::search() {

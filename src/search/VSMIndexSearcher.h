@@ -29,6 +29,11 @@ public:
 	VSMIndexSearcher(string directory) {
 		indexReader = new IndexReader(directory);
 	}
+	
+	VSMIndexSearcher(IndexReader* ir) {
+		indexReader = ir;
+	}
+	
 	~VSMIndexSearcher(){
 		delete indexReader;
 	}

@@ -57,13 +57,11 @@ public:
 	}
 	
 	Term* findTerm(string termStr){
-		cout << "Vocabulary.findTerm(): " << termStr << endl;
 		map<string, int>::iterator it = vocabulary.find(termStr);
 		if(it == vocabulary.end() ){
 			return NULL;
 		} else {
 			Term* p = &terms[it->second-1];
-			cout << "term found: " << p->term << endl;
 			return p;
 		}
 	}

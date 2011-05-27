@@ -56,8 +56,8 @@ public:
 		}
 		
 		//Defining constants
-		double b = 0.75; //b should be kept close to 1 to emphasise BM11 formula.
-		double K1 = 1; //Empirical constant. k1 = 1 works well with real collections
+		double b = 0; //b should be kept close to 1 to emphasise BM11 formula.
+		double K1 = 0.5; //Empirical constant. k1 = 1 works well with real collections
 		int N = indexReader->getCollectionSize(); // N = Number of documents in the collection
 
 		//Ranking calculation

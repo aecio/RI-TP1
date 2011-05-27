@@ -3,6 +3,10 @@
 # email: aeciosantos@dcc.ufmg.br
 PROJECT(TP1)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+include(CMakeForceCompiler)
+CMAKE_FORCE_C_COMPILER(gcc-4.5 GNU)
+CMAKE_FORCE_CXX_COMPILER(g++-4.5 GNU)
+
 
 SET (CMAKE_C_FLAGS "-Wall -Werror")
 SET (CMAKE_CXX_FLAGS "-Wall -Werror")
@@ -13,6 +17,3 @@ SET (CMAKE_CXX_FLAGS "-Wall -Werror")
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(riCode)
 ADD_SUBDIRECTORY(test)
-
-#Resolver bug de compilação do Witty
-#ADD_DEFINITIONS(-DNDEBUG)

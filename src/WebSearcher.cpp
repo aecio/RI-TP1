@@ -121,7 +121,7 @@ void WebSearcher::search() {
 	root()->addWidget(gbxResults);
 
 	
-	vector<Hit> hits = searcher->search(edtQuery->text().toUTF8 () , 10);
+	vector<Hit> hits = searcher->search(edtQuery->text().toUTF8 () , 20);
 		
 	if(hits.size() == 0){
 		WText* score = new WText(gbxResults);
@@ -141,6 +141,12 @@ void WebSearcher::search() {
 			
 			new WBreak(gbxResults);
 			new WBreak(gbxResults);		
+			
+//			WText* id = new WText(gbxResults);
+//			WString scoreStr("{1}");
+//			scoreStr.arg(it->doc.id);
+//			id->setText(scoreStr);
+//			new WBreak(gbxResults);
 		}
 	}
 	

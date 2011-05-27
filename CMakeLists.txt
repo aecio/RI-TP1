@@ -1,8 +1,10 @@
-# Trabalho Prático 1 - Recuperação de Informação
+# Trabalho Prático 2 - Recuperação de Informação
 # author: Aécio Solano Rodrigues Santos
 # email: aeciosantos@dcc.ufmg.br
+
 PROJECT(TP1)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
 include(CMakeForceCompiler)
 CMAKE_FORCE_C_COMPILER(gcc-4.5 GNU)
 CMAKE_FORCE_CXX_COMPILER(g++-4.5 GNU)

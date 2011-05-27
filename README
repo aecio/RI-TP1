@@ -1,0 +1,96 @@
+** COMPILAÇÃO E EXECUÇÃO DO PROJETO **
+
+Este projeto utiliza o sistema de build CMake. Portanto é necessário ter o 
+CMake instalado na computador. Também é necessário ter instalado as bibliotecas:
+- zlib (pode ser baixada em http://zlib.net/)
+- htmlcxx (pode ser baixada em http://htmlcxx.sourceforge.net)
+- wt 3.1.9 (pode ser baixada em http://htmlcxx.sourceforge.net)
+
+OBS: A interface de consulta web utiliza o framework Wt. Portanto também é 
+necessário tê-lo instalado para compilar o projeto. O Wt pode ser baixado a 
+partir do site: http://www.webtoolkit.eu/wt/download. Este projeto foi 
+desenvolvido utilizando o Wt versão 3.1.9.
+
+=============================== IMPORTANTE =====================================
+O compilador GCC versão 4.4 possui bug que impedem a compilção do Wt. Você deve
+instalar e utilizar o GCC 4.5 para compilar o projeto.
+================================================================================
+
+** PASSOS PARA COMPILAÇÃO
+
+-----
+1 Entrar na pasta do projeto.
+
+aecio@aecio-laptop:~$ cd RI-TP1/build/
+
+-----
+2 Executar o Cmake.
+
+aecio@aecio-laptop:~/RI-TP1/build$ cmake ..
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/aecio/RI-TP1/build
+
+-----
+3 Compilar o projeto.
+
+aecio@aecio-laptop:~/RI-TP1/build$ make
+
+
+** EXECUÇÃO DO INDEXER
+
+-----
+4 Executar projeto. Neste exemplo está sendo indexado 10000 documentos da
+coleção localizada na pasta “~/riCollection”, armazenando no máximo 1000000
+ocorrências na memória princial (runSize). O indice é armazenado na pasta de
+execução do programa, nesse caso “~/RI-TP1/build”.
+
+aecio@aecio-laptop:~/RI-TP1/build$ src/indexer --directory ~/riCollection --file index.txt --runSize 1000000 --numDocs 10000
+
+** EXECUÇÃO DO SEARCHER **
+
+-----
+5 Executar o searcher (utilizando o índice que está na pasta indice).
+aecio@aecio-laptop:~/RI-TP1/build$ src/searcher -d indice
+
+
+** EXECUÇÃO DO WEB SEARCHER (INTERFACE WEB) **
+
+aecio@aecio-laptop:~/RI-TP1/build$ src/websearcher.wt --docroot ../WebContent --http-address 127.0.0.1 --http-port 8080
+
+OBS1: Para utilizar, bastar abrir o enderço http://127.0.0.1:8080 no seu navevador.
+OBS2: O Web Searcher assume que o índice está na pasta "indice" que deve estar 
+localizada na pasta em que o projeto está sendo executado.
+
+
+** PARAMÊTROS DE EXECUÇÃO DO INDEXER **
+--------------------------------------------------------------------------------
+Parâmetro		Descrição
+--------------------------------------------------------------------------------
+-d 				Indica o diretório que está localizada a coleção de documentos a
+--directory 	ser indexada.
+--------------------------------------------------------------------------------
+--fileName		Indica o nome do arquivo de índice da coleção de documentos.
+-f 				Se não fornecido, assume o valor padrão “index.txt”.
+--------------------------------------------------------------------------------
+-r				Quantidade máxima de ocorrências (triplas <t, d, fd,t>) que devem
+--runSize		ser armazenadas em memória principal. Se não fornecido
+           		assume o valor padrão 1.000.000.
+--------------------------------------------------------------------------------
+-o 				Diretório que índice final deve ser armazenado.
+--output 		Se não fornecido assume como padrão a pasta de execução do
+            	programa.
+--------------------------------------------------------------------------------
+-n 				Quantidade de arquivos a ser indexados (se não fornecido
+-numDocs 		assume o valor padrão 999.999.999)
+--------------------------------------------------------------------------------
+
+
+** PARAMÊTROS DE EXECUÇÃO DO SEARCHER
+--------------------------------------------------------------------------------
+Parâmetro 	Descrição
+--------------------------------------------------------------------------------
+-d 				Indica o diretório que está armazenado o
+--directory 	índice gerado pelo indexer. Se não
+             	fornecido, assume como valor padrão
+--------------------------------------------------------------------------------

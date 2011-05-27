@@ -30,6 +30,23 @@ ADD_EXECUTABLE(	searcher Searcher.cpp
 				search/BooleanIndexSearcher.h
 				util/SequenceFile.h)
 				
+ADD_EXECUTABLE(	urlidentifier urlidentifier.cpp
+				index/Doc.h
+				util/SequenceFile.h)
+				
+ADD_EXECUTABLE(	gerar_consultas gerar_consultas.cpp
+				index/Doc.h
+				search/BM25IndexSearcher.h
+				index/Pair.h
+				index/Vocabulary.h
+				textanalysis/TextTokenizer.h
+				textanalysis/TextTokenizer.cpp
+				textanalysis/Stopwords.h
+				textanalysis/Stopwords.cpp
+				search/VSMIndexSearcher.h
+				search/BooleanIndexSearcher.h
+				util/SequenceFile.h)
+				
 ADD_LIBRARY(TP1 textanalysis/TextTokenizer.h
 				textanalysis/TextTokenizer.cpp
 				textanalysis/Stopwords.h

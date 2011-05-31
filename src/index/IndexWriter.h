@@ -21,34 +21,38 @@
 #include "util/Page.h"
 
 using namespace std;
-	
+
 class IndexWriter {
 
 	int runSize;
-	
+
 	string directory;
 	Vocabulary vocabulary;
-	
+
 	int docIdCounter;
 	int termIdCounter;
 	double averageDocLength;
-	
-	SequenceFile<Occurrence>* occurrencesFile;
+
+	Occurrence* buffer;
+	int bufferSize;
+
+	list<SequenceFile<Occurrence>* > runs;
 	SequenceFile<Doc>* pagesFile;
-	
-	string extractTextFrom(string& html);
-	
+
 public:
 	IndexWriter(string directory, int runSize = 500000);
 
 	int addDocument(Page& page);
+
+	void addOccurrence(int term_id, int doc_id, int frequency);
+	void maybeFlush();
+	void flush();
 	void commit();
-	
-	list<SequenceFile<Occurrence>*> createRuns();
+
 	SequenceFile<Occurrence>* merge(list<SequenceFile<Occurrence>*>&);
 	void merge2runs(SequenceFile<Occurrence>*, SequenceFile<Occurrence>*, SequenceFile<Occurrence>*);
-	 SequenceFile<Pair>* createInvertedFile(SequenceFile<Occurrence>* of);
-	
+	SequenceFile<Pair>* createInvertedFile(SequenceFile<Occurrence>* of);
+
 };
 
 #endif /* INDEXWRITER_H_ */

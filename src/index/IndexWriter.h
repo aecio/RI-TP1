@@ -12,7 +12,7 @@
 #include <fstream>
 #include <string>
 #include <map>
-#include <list>
+#include <vector>
 #include "index/Occurrence.h"
 #include "index/Vocabulary.h"
 #include "index/Pair.h"
@@ -36,8 +36,8 @@ class IndexWriter {
 	Occurrence* buffer;
 	int bufferSize;
 
-	list<SequenceFile<Occurrence>* > runs;
-	SequenceFile<Doc>* pagesFile;
+	vector<SequenceFile<Occurrence>* > runs;
+	SequenceFile<Doc>* documentsFile;
 
 public:
 	IndexWriter(string directory, int runSize = 500000);
@@ -49,7 +49,9 @@ public:
 	void flush();
 	void commit();
 
-	SequenceFile<Occurrence>* merge(list<SequenceFile<Occurrence>*>&);
+	SequenceFile<Occurrence>* kwaymerge(vector<SequenceFile<Occurrence>*>&);
+
+	SequenceFile<Occurrence>* merge(vector<SequenceFile<Occurrence>*>&);
 	void merge2runs(SequenceFile<Occurrence>*, SequenceFile<Occurrence>*, SequenceFile<Occurrence>*);
 	SequenceFile<Pair>* createInvertedFile(SequenceFile<Occurrence>* of);
 

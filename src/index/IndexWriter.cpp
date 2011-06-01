@@ -13,6 +13,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <queue>
 #include "textanalysis/TextTokenizer.h"
 #include "index/IndexWriter.h"
 #include "index/Pair.h"
@@ -27,7 +28,7 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	docIdCounter = 0;
 	termIdCounter = 0;
 	averageDocLength = 0;
-	pagesFile = new SequenceFile<Doc>(directory + "/urls");
+	documentsFile = new SequenceFile<Doc>(directory + "/urls");
 
 	buffer = new Occurrence[runSize];
 	bufferSize = 0;
@@ -54,7 +55,7 @@ int IndexWriter::addDocument(Page& page){
 	}
 	
 	Doc doc(docIdCounter, page.url, documentLength);
-	pagesFile->write(doc);
+	documentsFile->write(doc);
 	averageDocLength += documentLength;
 	
 	return docIdCounter;
@@ -97,15 +98,16 @@ void IndexWriter::commit() {
 
 	flush();
 
-	SequenceFile<Occurrence>* occurrencesSorted = merge(runs);
+	SequenceFile<Occurrence>* occurrencesSorted = kwaymerge(runs);
+//	SequenceFile<Occurrence>* occurrencesSorted = merge(runs);
 
-	SequenceFile<Pair>* invertedLists = createInvertedFile(occurrencesSorted);
+	createInvertedFile(occurrencesSorted);
+
 	occurrencesSorted->deleteFile();
 	
 	vocabulary.saveTo(directory + "/vocabulary");
 	
-	invertedLists->close();
-	pagesFile->close();
+	documentsFile->close();
 	
 	SequenceFile<double>* avgdoclen = new SequenceFile<double>(directory + "/avgdoclen");
 	double average = averageDocLength / docIdCounter;
@@ -117,8 +119,69 @@ void IndexWriter::commit() {
 	cout << "Done." << endl;
 }
 
-SequenceFile<Occurrence>* IndexWriter::merge(list<SequenceFile<Occurrence>*>& runs) {
-	cout << endl << "Merging " << runs.size() <<" runs..." << endl;
+SequenceFile<Occurrence>* IndexWriter::kwaymerge(vector<SequenceFile<Occurrence>*>& runs){
+	cout << "Merging "<< runs.size() <<" runs into " << directory + "/mergedfile" << endl;
+
+	if(runs.size() == 1){
+		cout << "Only one Run. No need to merge." << endl;
+		return runs.front();
+	}
+
+	SequenceFile<Occurrence>* merged = new SequenceFile<Occurrence>(directory + "/mergedfile");
+	bufferSize = 0;
+
+	map<Occurrence, int> run_index;
+	priority_queue< Occurrence, vector<Occurrence>, greater<Occurrence> > heap;
+
+	vector<SequenceFile<Occurrence>*>::iterator it = runs.begin();
+	for(; it != runs.end(); it++){
+		SequenceFile<Occurrence>* run = *it;
+		run->reopen();
+
+		Occurrence o = run->read();
+		heap.push(o);
+		run_index[o] = it - runs.begin();
+
+		cout << "Run "<< it - runs.begin() << " size: " << run->getSize() << endl;
+	}
+
+	while( !heap.empty() ){
+		Occurrence top = heap.top();
+		heap.pop();
+
+		buffer[bufferSize] = top;
+		bufferSize++;
+
+		if(bufferSize >= runSize){
+			merged->writeBlock(buffer, bufferSize);
+			bufferSize = 0;
+		}
+
+		int index = run_index[top];
+		if(runs[index]->hasNext()){
+			Occurrence head = runs[index]->read();
+			heap.push(head);
+			run_index[head] = index;
+		}
+	}
+
+	it = runs.begin();
+	for(; it != runs.end(); it++){
+		SequenceFile<Occurrence>* run = *it;
+		run->deleteFile();
+	}
+
+	if(bufferSize > 0){
+		merged->writeBlock(buffer, bufferSize);
+		bufferSize = 0;
+	}
+	cout << "Finished merging " << directory << "/mergedfile" << " with " << merged->getSize() << " entries." << endl;
+
+	return merged;
+}
+
+SequenceFile<Occurrence>* IndexWriter::merge(vector<SequenceFile<Occurrence>*>& runs) {
+	cout << "Merging " << runs.size() <<" runs..." << endl;
 	
 	if(runs.size() == 1){
 		cout << "Only one Run. No need to merge." << endl;
@@ -132,10 +195,10 @@ SequenceFile<Occurrence>* IndexWriter::merge(list<SequenceFile<Occurrence>*>& ru
 	int id = 0;
 	while(runs.size() > 1) {
 		run1 = runs.front();
-		runs.pop_front();
+		runs.erase(runs.begin());
 		
 		run2 = runs.front();
-		runs.pop_front();
+		runs.erase(runs.begin());
 	
 		stringstream name;
 		name << directory << "/temp" << id++;
@@ -193,21 +256,24 @@ void IndexWriter::merge2runs(SequenceFile<Occurrence>* runA,
 }
 
 SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of){
-	cout << endl << "Creating final index file..." << endl;
+	cout << "Creating final index file..." << endl;
 	SequenceFile<Pair>* index = new SequenceFile<Pair>(directory + "/index");
-	Occurrence* block = new Occurrence[runSize];
+
+//	buffer = new Occurrence[runSize];
+	bufferSize = 0;
+
 	of->reopen();
 	while( of->hasNext() ){
-		int blockSize = of->readBlock(block, runSize);
+		int blockSize = of->readBlock(buffer, runSize);
 		int j=0;
 		while(j < blockSize){
-			int termId = block[j].termId;
+			int termId = buffer[j].termId;
 
-			vocabulary.setListPosition(block[j].termId, index->getPosition() );
+			vocabulary.setListPosition(buffer[j].termId, index->getPosition() );
 
-			while(termId == block[j].termId) {
+			while(termId == buffer[j].termId) {
 
-				Pair entry(block[j].docId, block[j].termFrequencyInDoc);
+				Pair entry(buffer[j].docId, buffer[j].termFrequencyInDoc);
 				index->write(entry);
 
 				vocabulary.incrementDocFrequency(termId);
@@ -216,7 +282,7 @@ SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of
 
 				//se o array acabar, ler outro bloco
 				if(j >= blockSize && of->hasNext() ){
-					blockSize = of->readBlock(block, runSize);
+					blockSize = of->readBlock(buffer, runSize);
 					j=0;
 				}
 			}

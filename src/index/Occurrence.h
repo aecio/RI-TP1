@@ -30,6 +30,15 @@ public:
 		else
 			return false;
 	}
+
+	friend bool operator>(const Occurrence &x, const Occurrence &y){
+		if(x.termId > y.termId)
+			return true;
+		else if( (x.termId == y.termId) && (x.docId > y.docId) )
+			return true;
+		else
+			return false;
+	}
 };
 
 #endif /* OCCURRENCE_H_ */

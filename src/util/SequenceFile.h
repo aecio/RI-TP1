@@ -19,20 +19,25 @@ class SequenceFile {
 
 	int size;
 	string name;
-	fstream file;
+	FILE* file;
 	
 public:
 
 	class FileClosedException {};
 	
 	SequenceFile(string fileName, bool trunc = true){
+		open(fileName, trunc);
+	}
+	
+	void open(string fileName, bool trunc = true){
 		name = fileName;
 		if(trunc){
-			file.open(name.c_str(), ios::in | ios::out | ios::binary | ios::trunc);
+			file = fopen(name.c_str(), "w+b");
 			size = 0;
 		} else{
-			file.open(name.c_str(), ios::in | ios::out | ios::binary | ios::ate);
-			int fileSize = file.tellg();
+			file = fopen(name.c_str(), "a+b");
+			fseek(file, 0, SEEK_END);
+			int fileSize = ftell(file);
 			size = fileSize / sizeof(T);
 			rewind();
 		}
@@ -40,14 +45,14 @@ public:
 	
 	int write(T& oc){
 		ensureFileIsOpen();
-		file.write((char *) &oc, sizeof(T)); // grava no arquivo
+		fwrite((char *) &oc, sizeof(T), 1, file);
 		size++;
 		return size;
 	}
 	
 	int writeBlock(T *oc, int blockSize){
 		ensureFileIsOpen();
-		file.write((char *) oc, sizeof(T)*blockSize); // grava no arquivo
+		fwrite((char *) oc, sizeof(T), blockSize, file);
 		size += blockSize;
 		return size;
 	}
@@ -55,27 +60,23 @@ public:
 	T read(){
 		ensureFileIsOpen();
 		T oc;
-		file.read((char*) &oc, sizeof(T)); // lê do arquivo
+		fread((char*) &oc, sizeof(oc), 1, file); // lê do arquivo
 		return oc;
 	}
 	
 	int readBlock(T *oc, int blockSize){
 		ensureFileIsOpen();
-		file.read((char*) oc, sizeof(T) * blockSize );
-		if( file.eof() )
-			return file.gcount()/sizeof(T);
-		else
-			return blockSize;
+		size_t elements_read = fread((char*) oc, sizeof(T), blockSize, file); // lê do arquivo
+		return elements_read;
 	}
 	
 	void rewind(){
 		ensureFileIsOpen();
-		file.seekg(0, ios::beg);
-		file.seekp(0, ios::beg);
+		fseek(file, 0, SEEK_SET);
 	}
 	
 	void ensureFileIsOpen(){
-		if( !file.is_open() ) {
+		if( file == NULL){
 			cout << "File " << name << " is not open!" << endl;
 			throw FileClosedException();
 		}
@@ -92,17 +93,17 @@ public:
 	
 	int getPosition(){
 		ensureFileIsOpen();
-		int getPointer = file.tellg();
-		if(getPointer == 0)
-			return getPointer;
-		else
-			return getPointer/sizeof(T);
+		int pointer = ftell(file);
+		int position = pointer/sizeof(T);
+		if(feof(file)){
+			return position+1;
+		}
+		return position;
 	}
 	
 	void setPosition(int position){
 		ensureFileIsOpen();
-		file.seekg(position*sizeof(T), ios::beg);
-		file.seekp(position*sizeof(T), ios::beg);
+		fseek(file, position*sizeof(T), SEEK_SET);
 	}
 	
 	int getSize(){
@@ -116,15 +117,13 @@ public:
 	
 	void reopen(){
 		close();
-		file.open(name.c_str(), ios::in | ios::out | ios::binary | ios::ate);
-		int fileSize = file.tellg();
-		size = fileSize / sizeof(T);
-		rewind();
+		open(name, false);
 	}
 	
 	void close(){
-		if(file.is_open()){
-			file.close();
+		if(file != NULL){
+			fclose(file);
+			file = NULL;
 		}
 	}
 	

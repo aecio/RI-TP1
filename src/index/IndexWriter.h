@@ -30,7 +30,6 @@ class IndexWriter {
 	Vocabulary vocabulary;
 
 	int docIdCounter;
-	int termIdCounter;
 	double averageDocLength;
 
 	Occurrence* buffer;

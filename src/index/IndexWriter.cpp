@@ -26,7 +26,6 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	runSize = runSize_;	
 	directory = directory_;
 	docIdCounter = 0;
-	termIdCounter = 0;
 	averageDocLength = 0;
 	documentsFile = new SequenceFile<Doc>(directory + "/urls");
 

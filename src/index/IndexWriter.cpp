@@ -37,7 +37,7 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 int IndexWriter::addDocument(Page& page){
 	docIdCounter++;
 	
-	string text = page.getPlainText();
+	string text = page.getText();
 	TextTokenizer tokenizer(text);
 
 	map<string, int> terms;
@@ -54,7 +54,7 @@ int IndexWriter::addDocument(Page& page){
 		addOccurrence(termId, docIdCounter, it->second);
 	}
 	
-	Doc doc(docIdCounter, page.url, documentLength);
+	Doc doc(docIdCounter, page.getUrl(), documentLength);
 	documentsFile->write(doc);
 	averageDocLength += documentLength;
 	

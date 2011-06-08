@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 #include <queue>
-#include "textanalysis/TextTokenizer.h"
+#include "textanalysis/Analyzer.h"
 #include "index/IndexWriter.h"
 #include "index/Pair.h"
 #include "util/Page.h"
@@ -37,15 +37,9 @@ int IndexWriter::addDocument(Page& page){
 	docIdCounter++;
 	
 	string text = page.getText();
-	TextTokenizer tokenizer(text);
+	Analyzer textAnalyzer(text);
 
-	map<string, int> terms;
-	int documentLength = 0;
-	while(tokenizer.hasNext()){ //para cada termo "indexável"
-		string t = tokenizer.nextToken();
-		terms[t]++; //contabilizar frequencia do termo neste doc
-		documentLength++;
-	}
+	map<string, int> terms = textAnalyzer.getTermFreqs();
 	
 	map<string, int>::iterator it = terms.begin();
 	for(; it != terms.end(); it++){
@@ -53,9 +47,9 @@ int IndexWriter::addDocument(Page& page){
 		addOccurrence(termId, docIdCounter, it->second);
 	}
 	
-	Doc doc(docIdCounter, page.getUrl(), documentLength);
+	Doc doc(docIdCounter, page.getUrl(), textAnalyzer.getLength());
 	documentsFile->write(doc);
-	averageDocLength += documentLength;
+	averageDocLength += textAnalyzer.getLength();
 	
 	return docIdCounter;
 }

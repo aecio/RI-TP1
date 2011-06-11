@@ -36,7 +36,7 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	
 int IndexWriter::addDocument(Page& page) {
 	docIdCounter++;
-	
+
 	string text = page.getText();
 	string title = page.getTitle();
 //	string anchor = page.getAnchorText();
@@ -49,14 +49,11 @@ int IndexWriter::addDocument(Page& page) {
 	Analyzer descriptionAnalyzer(description);
 	Analyzer keywordsAnalyzer(keywords);
 
-	map<string, int> terms = contentAnalyzer.getTermFreqs();
-	
 	proccessTerms(contentAnalyzer.getTermFreqs(), CONTENT);
 	proccessTerms(titleAnalyzer.getTermFreqs(), TITLE);
 //	proccessTerms(achorAnalyzer.getTermFreqs(), ANCHOR_TEXT);
 	proccessTerms(descriptionAnalyzer.getTermFreqs(), DESCRIPTION);
 	proccessTerms(keywordsAnalyzer.getTermFreqs(), KEYWORDS);
-
 
 	Doc doc(docIdCounter, page.getUrl(), page.getTitle(), page.getDescription());
 	documentsFile->write(doc);

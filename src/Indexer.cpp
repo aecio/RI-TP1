@@ -8,7 +8,7 @@
 #include "util/Page.h"
 
 #define MAX_DOCS 99999999
-#define RUN_SIZE 1000000
+#define RUN_SIZE 5000000
 
 using namespace std;
 using namespace RICPNS;	
@@ -55,29 +55,23 @@ int main(int argc, char* argv[]){
 	Document doc;
 	doc.clear();
 
-	IndexWriter* iw = new IndexWriter(indexDirectory, runSize);
+	IndexWriter indexWriter(indexDirectory, runSize);
+
 	int docsIndexed = 0;
 	cout << "Indexing documents..." << endl;
 	while(reader->getNextDocument(doc) && docsIndexed < numDocs){
 		docsIndexed++;
 		
-		if(docsIndexed % 10000 == 0) {
+		if(docsIndexed % 5000 == 0) {
 			cout <<	docsIndexed << " documents indexed..." << endl;
 		}
 		
 		Page p(doc.getURL(), doc.getText());
-		cout << "URL: "<< p.getUrl() << endl;
-//		cout << "Titulo: "<< p.getTitle() << endl;
-//		cout << "Description: " << p.getDescription() << endl;
-//		cout << "Encoding: " << p.getContentType() << endl;
-//		cout << "Keywords: "<< p.getKeywords() << endl;
-		cout << endl;
+		indexWriter.addDocument(p);
 
-		iw->addDocument(p);
-		
 		doc.clear();
 	}
-	iw->commit();
+	indexWriter.commit();
 	return 0;
 }
 

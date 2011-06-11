@@ -12,7 +12,7 @@
 #include <stdlib.h>
 
 #define URL_SIZE 1000
-#define TITLE_SIZE 2000
+#define TITLE_SIZE 300
 #define DESCRIPTION_SIZE 4000
 
 using namespace std;
@@ -20,9 +20,9 @@ using namespace std;
 class Doc {
 public:
 	int id;
-	char url[1000];
-	char title[2000];
-	char description[3000];
+	char url[URL_SIZE];
+	char title[TITLE_SIZE];
+	char description[DESCRIPTION_SIZE];
 
 	Doc() {}
 	
@@ -33,9 +33,9 @@ public:
 		truncString(descriptionStr, description, DESCRIPTION_SIZE);
 	}
 
-	void truncString(string str, char* c_str, int size){
-		size_t strSize = str.copy(c_str, size);
-		c_str[strSize]='\0';
+	void truncString(string str, char* c_str, int maxSize){
+		int length = str.copy(c_str, maxSize);
+		c_str[length] = '\0';
 	}
 
 	int getId(){

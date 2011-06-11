@@ -14,6 +14,7 @@
 #include <search/VSMIndexSearcher.h>
 #include <search/BM25IndexSearcher.h>
 #include <search/CombinedIndexSearcher.h>
+#include <search/MultiFieldIndexSearcher.h>
 
 using namespace Wt;
 
@@ -23,7 +24,7 @@ public:
 	WebSearcher(const WEnvironment& env);
 	
 private:
-	enum IRModel { BM25 = 1, Vector = 2, Combined = 3};
+	enum IRModel { BM25 = 1, Vector = 2, Combined = 3, MultiField = 4};
 	
 	IndexSearcher* searcher;
 	IndexReader* reader;
@@ -35,6 +36,7 @@ private:
 	void btnVectorHandler();
 	void btnBM25Handler();
 	void btnMixedModelHandler();
+	void btnMultiFieldModelHandler();
 };
 
 WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
@@ -78,6 +80,10 @@ WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
 	button->clicked().connect(this, &WebSearcher::btnMixedModelHandler);
 	bgModel->addButton(button, Combined);
 
+	button = new WRadioButton("Multi Field", container);
+	button->clicked().connect(this, &WebSearcher::btnMultiFieldModelHandler);
+	bgModel->addButton(button, MultiField);
+
 	bgModel->setCheckedButton(bgModel->button(BM25));
 	
 	reader = new IndexReader("indice");
@@ -99,6 +105,12 @@ void WebSearcher::btnVectorHandler(){
 	cout << "Changing model to: Vector Space Model." << endl;
 	delete searcher;
 	searcher = new VSMIndexSearcher(reader);
+}
+
+void WebSearcher::btnMultiFieldModelHandler(){
+	cout << "Changing model to: Multi Field BM25 Model." << endl;
+	delete searcher;
+	searcher = new MultiFieldIndexSearcher(reader);
 }
 
 void WebSearcher::btnBM25Handler(){
@@ -129,11 +141,25 @@ void WebSearcher::search() {
 	} else {
 		vector<Hit>::iterator it = hits.begin();
 		for(; it != hits.end(); it++){
-			WAnchor* link = new WAnchor(gbxResults);
-			link->setText(it->doc.url);
-			link->setRef(it->doc.url);
+			WAnchor* title = new WAnchor(gbxResults);
+			title->setText(it->doc.getTitle());
+			title->setRef(it->doc.getUrl());
 			new WBreak(gbxResults);
-		
+
+			string desc = it->doc.getDescription();
+			std::remove(desc.begin(), desc.end(), ' ');
+			if(desc != ""){
+				WText* description = new WText(gbxResults);
+				description->setText(it->doc.getDescription());
+				new WBreak(gbxResults);
+			}
+
+			WAnchor* link = new WAnchor(gbxResults);
+			link->setText(it->doc.getUrl());
+			link->setRef(it->doc.getUrl());
+			link->setAttributeValue	("style", "color:green;text-decoration:none;");
+			new WBreak(gbxResults);
+
 			WText* score = new WText(gbxResults);
 			WString scoreStr("Score: {1}");
 			scoreStr.arg(it->score);
@@ -141,12 +167,6 @@ void WebSearcher::search() {
 			
 			new WBreak(gbxResults);
 			new WBreak(gbxResults);		
-			
-//			WText* id = new WText(gbxResults);
-//			WString scoreStr("{1}");
-//			scoreStr.arg(it->doc.id);
-//			id->setText(scoreStr);
-//			new WBreak(gbxResults);
 		}
 	}
 	

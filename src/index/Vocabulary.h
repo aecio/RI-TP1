@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include "index/Term.h"
+#include "index/Field.h"
 #include "util/SequenceFile.h"
 
 using namespace std;
@@ -31,12 +32,10 @@ public:
 			Term term = sf.read();
 			terms.push_back(term);
 			
-			int& id = vocabulary[string(term.term)];
+			int& id = vocabulary[term.getTerm()];
 			id = terms.size();
 		}
 		sf.close();
-		
-		cout << "Tamanho do vocabulario: " << terms.size() << endl;
 	}
 	
 	int addTerm(string termStr){
@@ -66,22 +65,22 @@ public:
 		}
 	}
 	
-	void setListPosition(int termId, int position){
-		terms[termId-1].listPosition = position;
+	void setTermFieldPosition(int termId, int field, int position){
+		terms[termId-1].setFieldListPosition(field, position);
 	}
-	
-	int getListPosition(int termId){
-		return terms[termId-1].listPosition;
+
+	int getTermFieldPosition(int termId, int field){
+		return terms[termId-1].getFieldListPosition(field);
 	}
-	
-	void incrementDocFrequency(int termId){
-		terms[termId-1].docFrequency++;
+
+	int getTermFieldFrequency(int termId, Field field){
+		return terms[termId-1].getFieldFrequency(field);
 	}
-	
-	int getDocFrequency(int termId){
-		return terms[termId-1].docFrequency;
+
+	void incrementTermFieldFrequency(int termId, int field){
+		terms[termId-1].incrementFieldFrequency(field);
 	}
-	
+
 	void saveTo(string fileName){
 		SequenceFile<Term> sf(fileName);
 		vector<Term>::iterator it = terms.begin();

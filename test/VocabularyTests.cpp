@@ -56,13 +56,13 @@ void should_increment_and_return_frequency_of_the_terms(){
 	int id = v.addTerm(term1);
 
 	//then
-	assert(v.getDocFrequency(id) == 0);
+	assert(v.getTermFieldFrequency(id, CONTENT) == 0);
 	
-	v.incrementDocFrequency(id);
-	assert(v.getDocFrequency(id) == 1);
+	v.incrementTermFieldFrequency(id, CONTENT);
+	assert(v.getTermFieldFrequency(id, CONTENT) == 1);
 	
-	v.incrementDocFrequency(id);
-	assert(v.getDocFrequency(id) == 2);
+	v.incrementTermFieldFrequency(id, CONTENT);
+	assert(v.getTermFieldFrequency(id, CONTENT) == 2);
 }
 
 void should_set_and_return_correct_list_positions(){
@@ -74,12 +74,12 @@ void should_set_and_return_correct_list_positions(){
 	int id2 = v.addTerm("term2");
 	
 	//when
-	v.setListPosition(id1, 0);
-	v.setListPosition(id2, 10);
+	v.setTermFieldPosition(id1, CONTENT, 0);
+	v.setTermFieldPosition(id2, CONTENT, 10);
 	
 	//then
-	assert(v.getListPosition(id1) == 0);
-	assert(v.getListPosition(id2) == 10);
+	assert(v.getTermFieldPosition(id1, CONTENT) == 0);
+	assert(v.getTermFieldPosition(id2, CONTENT) == 10);
 }
 
 void should_save_terms_to_a_file(){
@@ -91,25 +91,25 @@ void should_save_terms_to_a_file(){
 	string term3 = "term3";
 	
 	int id1 = v.addTerm(term1);
-	v.setListPosition(id1, 10);
-	v.incrementDocFrequency(id1);
+	v.setTermFieldPosition(id1, CONTENT, 10);
+	v.incrementTermFieldFrequency(id1, CONTENT);
 	assert(id1 == 1);
-	assert(v.getDocFrequency(id1) == 1);
+	assert(v.getTermFieldFrequency(id1, CONTENT) == 1);
 	
 	int id2 = v.addTerm(term2);
-	v.setListPosition(id2, 20);
-	v.incrementDocFrequency(id2);
-	v.incrementDocFrequency(id2);
+	v.setTermFieldPosition(id2, CONTENT, 20);
+	v.incrementTermFieldFrequency(id2, CONTENT);
+	v.incrementTermFieldFrequency(id2, CONTENT);
 	assert(id2 == 2);
-	assert(v.getDocFrequency(id2) == 2);
+	assert(v.getTermFieldFrequency(id2, CONTENT) == 2);
 	
 	int id3 = v.addTerm(term3);
-	v.setListPosition(id3, 30);
-	v.incrementDocFrequency(id3);
-	v.incrementDocFrequency(id3);
-	v.incrementDocFrequency(id3);
+	v.setTermFieldPosition(id3, CONTENT, 30);
+	v.incrementTermFieldFrequency(id3, CONTENT);
+	v.incrementTermFieldFrequency(id3, CONTENT);
+	v.incrementTermFieldFrequency(id3, CONTENT);
 	assert(id3 == 3);
-	assert(v.getDocFrequency(id3) == 3);
+	assert(v.getTermFieldFrequency(id3, CONTENT) == 3);
 	
 	//when
 	v.saveTo(VOCABULARY_TEST_FILE);
@@ -118,19 +118,19 @@ void should_save_terms_to_a_file(){
 	SequenceFile<Term> sf(VOCABULARY_TEST_FILE, false);
 	
 	Term t = sf.read();
-	assert(term1.compare(t.term) == 0);
-	assert(t.docFrequency == 1);
-	assert(t.listPosition == 10);
+	assert(term1 == t.getTerm());
+	assert(t.getFieldFrequency(CONTENT) == 1);
+	assert(t.getFieldListPosition(CONTENT) == 10);
 	
 	t = sf.read();
-	assert(term2.compare(t.term) == 0);
-	assert(t.docFrequency == 2);
-	assert(t.listPosition == 20);
+	assert(term2 == t.getTerm());
+	assert(t.getFieldFrequency(CONTENT) == 2);
+	assert(t.getFieldListPosition(CONTENT) == 20);
 	
 	t = sf.read();
-	assert(term3.compare(t.term) == 0);
-	assert(t.docFrequency == 3);
-	assert(t.listPosition == 30);
+	assert(term3 == t.getTerm());
+	assert(t.getFieldFrequency(CONTENT) == 3);
+	assert(t.getFieldListPosition(CONTENT) == 30);
 }
 
 void should_rebuild_vocabulary_correctly(){
@@ -158,13 +158,13 @@ void should_rebuild_vocabulary_correctly(){
 	//then
 	Term* t;
 	t = vocabulary.findTerm(term1);
-	assert(term1.compare(t->term) == 0);
+	assert(term1 == t->getTerm());
 	
 	t = vocabulary.findTerm(term2);
-	assert(term2.compare(t->term) == 0);
+	assert(term2 == t->getTerm());
 	
 	t = vocabulary.findTerm(term3);
-	assert(term3.compare(t->term) == 0);
+	assert(term3 == t->getTerm());
 }
 
 void vocabulary_test_cases() {

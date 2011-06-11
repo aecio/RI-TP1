@@ -19,6 +19,7 @@
 #include "index/Pair.h"
 #include "util/Page.h"
 #include "util/SequenceFile.h"
+#include "util/BufferedFile.h"
 
 using namespace std;
 	
@@ -28,34 +29,55 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	docIdCounter = 0;
 	averageDocLength = 0;
 	documentsFile = new SequenceFile<Doc>(directory + "/urls");
-
+	docLenghtFile =  new SequenceFile<int>(directory + "/doclength");
 	buffer = new Occurrence[runSize];
 	bufferSize = 0;
 }
 	
-int IndexWriter::addDocument(Page& page){
+int IndexWriter::addDocument(Page& page) {
 	docIdCounter++;
 	
 	string text = page.getText();
-	Analyzer textAnalyzer(text);
+	string title = page.getTitle();
+//	string anchor = page.getAnchorText();
+	string description = page.getDescription();
+	string keywords = page.getKeywords();
 
-	map<string, int> terms = textAnalyzer.getTermFreqs();
+	Analyzer contentAnalyzer(text);
+	Analyzer titleAnalyzer(title);
+//	Analyzer anchorAnalyzer(achor);
+	Analyzer descriptionAnalyzer(description);
+	Analyzer keywordsAnalyzer(keywords);
+
+	map<string, int> terms = contentAnalyzer.getTermFreqs();
 	
-	map<string, int>::iterator it = terms.begin();
-	for(; it != terms.end(); it++){
-		int termId = vocabulary.addTerm(it->first);
-		addOccurrence(termId, docIdCounter, it->second);
-	}
-	
-	Doc doc(docIdCounter, page.getUrl(), textAnalyzer.getLength());
+	proccessTerms(contentAnalyzer.getTermFreqs(), CONTENT);
+	proccessTerms(titleAnalyzer.getTermFreqs(), TITLE);
+//	proccessTerms(achorAnalyzer.getTermFreqs(), ANCHOR_TEXT);
+	proccessTerms(descriptionAnalyzer.getTermFreqs(), DESCRIPTION);
+	proccessTerms(keywordsAnalyzer.getTermFreqs(), KEYWORDS);
+
+
+	Doc doc(docIdCounter, page.getUrl(), page.getTitle(), page.getDescription());
 	documentsFile->write(doc);
-	averageDocLength += textAnalyzer.getLength();
+
+    int docLength = contentAnalyzer.getLength();
+    docLenghtFile->write(docLength);
+	averageDocLength += docLength;
 	
 	return docIdCounter;
 }
 
-void IndexWriter::addOccurrence(int term_id, int doc_id, int frequency){
-	buffer[bufferSize] = Occurrence(term_id, doc_id, frequency);
+void IndexWriter::proccessTerms(map<string, int> terms, Field field){
+	map<string, int>::iterator it = terms.begin();
+	for(; it != terms.end(); it++){
+		int termId = vocabulary.addTerm(it->first);
+		addOccurrence(termId, docIdCounter, it->second, field);
+	}
+}
+
+void IndexWriter::addOccurrence(int term_id, int doc_id, int frequency, int field){
+	buffer[bufferSize] = Occurrence(term_id, doc_id, frequency, field);
 	bufferSize++;
 	maybeFlush();
 }
@@ -92,7 +114,6 @@ void IndexWriter::commit() {
 	flush();
 
 	SequenceFile<Occurrence>* occurrencesSorted = kwaymerge(runs);
-//	SequenceFile<Occurrence>* occurrencesSorted = merge(runs);
 
 	createInvertedFile(occurrencesSorted);
 
@@ -252,34 +273,31 @@ SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of
 	cout << "Creating final index file..." << endl;
 	SequenceFile<Pair>* index = new SequenceFile<Pair>(directory + "/index");
 
-//	buffer = new Occurrence[runSize];
-	bufferSize = 0;
-
 	of->reopen();
-	while( of->hasNext() ){
-		int blockSize = of->readBlock(buffer, runSize);
-		int j=0;
-		while(j < blockSize){
-			int termId = buffer[j].termId;
+	BufferedFile<Occurrence> bufferedFile(of, buffer, runSize);
 
-			vocabulary.setListPosition(buffer[j].termId, index->getPosition() );
+	int termId = -1;
+	int field;
+	while( bufferedFile.hasNext() ){
+			Occurrence occurrence = bufferedFile.read();
 
-			while(termId == buffer[j].termId) {
-
-				Pair entry(buffer[j].docId, buffer[j].termFrequencyInDoc);
-				index->write(entry);
-
-				vocabulary.incrementDocFrequency(termId);
-
-				j++;
-
-				//se o array acabar, ler outro bloco
-				if(j >= blockSize && of->hasNext() ){
-					blockSize = of->readBlock(buffer, runSize);
-					j=0;
-				}
+			if(termId != occurrence.term_id){
+				termId = occurrence.term_id;
+				field = -1;
+//				cout << "Escrenvendo lista para termo: " << termId << endl;
 			}
-		}
+
+			if(field != occurrence.field){
+				field = occurrence.field;
+				vocabulary.setTermFieldPosition(occurrence.term_id, occurrence.field, index->getPosition());
+//				cout << "Campo: " << occurrence.field << endl;
+			}
+
+			Pair entry(occurrence.doc_id, occurrence.term_frequency);
+//			cout << "(" << occurrence.doc_id << "," << occurrence.term_frequency <<")" << endl;
+			index->write(entry);
+
+			vocabulary.incrementTermFieldFrequency(occurrence.term_id, occurrence.field);
 	}
 	index->close();
 	return index;

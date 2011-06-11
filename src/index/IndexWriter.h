@@ -13,6 +13,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "index/Field.h"
 #include "index/Occurrence.h"
 #include "index/Vocabulary.h"
 #include "index/Pair.h"
@@ -37,13 +38,15 @@ class IndexWriter {
 
 	vector<SequenceFile<Occurrence>* > runs;
 	SequenceFile<Doc>* documentsFile;
+	SequenceFile<int>* docLenghtFile;
 
 public:
+
 	IndexWriter(string directory, int runSize = 500000);
 
 	int addDocument(Page& page);
-
-	void addOccurrence(int term_id, int doc_id, int frequency);
+	void proccessTerms(map<string, int> terms, Field field);
+	void addOccurrence(int term_id, int doc_id, int frequency, int field);
 	void maybeFlush();
 	void flush();
 	void commit();

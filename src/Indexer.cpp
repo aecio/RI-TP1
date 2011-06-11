@@ -66,6 +66,13 @@ int main(int argc, char* argv[]){
 		}
 		
 		Page p(doc.getURL(), doc.getText());
+		cout << "URL: "<< p.getUrl() << endl;
+//		cout << "Titulo: "<< p.getTitle() << endl;
+//		cout << "Description: " << p.getDescription() << endl;
+//		cout << "Encoding: " << p.getContentType() << endl;
+//		cout << "Keywords: "<< p.getKeywords() << endl;
+		cout << endl;
+
 		iw->addDocument(p);
 		
 		doc.clear();

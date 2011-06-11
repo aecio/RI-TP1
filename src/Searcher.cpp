@@ -12,6 +12,7 @@
 #include "search/BooleanIndexSearcher.h"
 #include "search/VSMIndexSearcher.h"
 #include "search/BM25IndexSearcher.h"
+#include "search/MultiFieldIndexSearcher.h"
 #include "search/Hit.h"
 #include "index/Pair.h"
 #include "index/Doc.h"
@@ -19,12 +20,12 @@
 using namespace std;
 
 int main(int argc, char* argv[]){
-	enum IRModel {BM25, VECTOR, BOOLEAN};
+	enum IRModel {BM25, VECTOR, BOOLEAN, MULTIFIELD};
 	
 	int maxHits = 10;
 	string directory = ".";
 	IndexSearcher* searcher;
-	IRModel model = BM25;
+	IRModel model = MULTIFIELD;
 	
 	//Parse comand line arguments
 	for(int i=0; i<argc; i++){
@@ -54,9 +55,12 @@ int main(int argc, char* argv[]){
 			searcher = new VSMIndexSearcher(directory);
 			break;
 		case BM25:
-		default:
 			cout << "(using BM25 Model)" << endl;
 			searcher = new BM25IndexSearcher(directory);
+			break;
+		default:
+			cout << "(using BM25 Model with MultiFieldSearcher)" << endl;
+			searcher = new MultiFieldIndexSearcher(directory);
 			break;
 	}
 	
@@ -65,7 +69,7 @@ int main(int argc, char* argv[]){
 	getline(cin, query);
 	while(query != "sair"){
 		vector<Hit> hits = searcher->search(query, maxHits);
-		
+
 		if(hits.size() == 0){
 			cout << endl << "Documents not found for your query. Try again." << endl;
 		} else {
@@ -73,10 +77,11 @@ int main(int argc, char* argv[]){
 			vector<Hit>::iterator it = hits.begin();
 			for(; it != hits.end(); it++){
 				cout << endl;
+				cout << it->doc.title << endl;
 				cout << it->doc.url << endl;
 				cout << "score: " << it->score << "\t";
 				cout << "docId: " << it->doc.id << "\t"; 
-				cout << "docLength: " << it->doc.length << endl;
+				cout << "docLength: " << it->length << endl;
 			}
 		}
 		cout << "___________________________________________" << endl;

@@ -13,13 +13,14 @@
 class Hit {
 public:
 	double score;
+	int length;
 	Doc doc;
 
 	Hit() {
 		score = 0.0;
 	}
 	
-	Hit(double score_, Doc document){
+	Hit(double score_, int lenght, Doc document){
 		score = score_;
 		doc = document;
 	}

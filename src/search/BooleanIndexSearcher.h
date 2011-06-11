@@ -34,7 +34,7 @@ public:
 	vector<Doc> readDocs(Pair* pairs, int n){
 		vector<Doc> docs;
 		for(int i=0; i < n; i++){
-			pagesFile->setPosition(pairs[i].docId-1);
+			pagesFile->setPosition(pairs[i].doc_id-1);
 			Doc d = pagesFile->read();
 			docs.push_back(d);
 		}
@@ -44,7 +44,7 @@ public:
 	vector<Doc> readDocs(vector<Pair> pairs){
 		vector<Doc> docs;
 		for(unsigned int i=0; i < pairs.size(); i++){
-			pagesFile->setPosition(pairs[i].docId-1);
+			pagesFile->setPosition(pairs[i].doc_id-1);
 			Doc d = pagesFile->read();
 			docs.push_back(d);
 		}
@@ -56,7 +56,7 @@ public:
 		vector<Doc> hits;
 		if(term != NULL) {
 			Pair* pairs = readInvertedList(term);
-			hits = readDocs(pairs, term->docFrequency);
+			hits = readDocs(pairs, term->getFieldFrequency(CONTENT));
 		}
 		return hits;
 	}
@@ -77,12 +77,12 @@ public:
 		Pair* pairs2 = readInvertedList(term2);
 	
 		if(conector == AND) {
-			vector<Pair> result = intersectionSet( pairs1, term1->docFrequency,
-													pairs2, term2->docFrequency);
+			vector<Pair> result = intersectionSet( pairs1, term1->getFieldFrequency(CONTENT),
+													pairs2, term2->getFieldFrequency(CONTENT));
 			hits = readDocs(result);
 		} else {
-			vector<Pair> result = unionSet( pairs1, term1->docFrequency,
-					 						pairs2, term2->docFrequency);
+			vector<Pair> result = unionSet( pairs1, term1->getFieldFrequency(CONTENT),
+					 						pairs2, term2->getFieldFrequency(CONTENT));
 			hits = readDocs(result);
 		}
 		return hits;
@@ -115,9 +115,9 @@ public:
 	}
 	
 	Pair* readInvertedList(Term* term){
-		Pair* pairs = new Pair[term->docFrequency];
-		invertedLists->setPosition(term->listPosition);
-		invertedLists->readBlock(pairs, term->docFrequency);
+		Pair* pairs = new Pair[term->getFieldFrequency(CONTENT)];
+		invertedLists->setPosition(term->getFieldListPosition(CONTENT));
+		invertedLists->readBlock(pairs, term->getFieldFrequency(CONTENT));
 		return pairs;
 	}
 	

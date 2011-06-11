@@ -10,18 +10,18 @@
 
 class Pair {
 public:
-	int docId;
+	int doc_id;
 	int frequency_dt;
 
 	Pair() {}
 	
 	Pair(int docId_, int frequency_dt_){
-		docId = docId_;
+		doc_id = docId_;
 		frequency_dt = frequency_dt_;
 	}
 	
 	friend bool operator<(const Pair &x, const Pair &y){
-		if(x.docId < y.docId)
+		if(x.doc_id < y.doc_id)
 			return true;
 		else
 			return false;

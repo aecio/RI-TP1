@@ -62,21 +62,22 @@ public:
 			if(term == NULL)
 				continue;
 			
-			double wt = 1 + log( numDocs/term->docFrequency ); // deixar pré-computado no índice?
+			double wt = 1 + log( numDocs/term->getFieldFrequency(CONTENT) ); // deixar pré-computado no índice?
 			
 			Pair* invertedList = indexReader->getInvertedList(term);
 			
-			for(int i=0; i<term->docFrequency; i++){
+			for(int i=0; i<term->getFieldFrequency(CONTENT); i++){
 				Hit accumulator;
-				map<int, Hit>::iterator value = accumulators.find(invertedList[i].docId);
+				map<int, Hit>::iterator value = accumulators.find(invertedList[i].doc_id);
 				if(value == accumulators.end() ){
-					accumulator = accumulators[invertedList[i].docId];
-					accumulator.doc = indexReader->getDoc(invertedList[i].docId);
+					accumulator = accumulators[invertedList[i].doc_id];
+					accumulator.doc.id = invertedList[i].doc_id;
+					accumulator.length = indexReader->getDocLength(invertedList[i].doc_id);
 				}else{
 					accumulator = value->second;
 				}
 				accumulator.score += log(1+ invertedList[i].frequency_dt) * wt;
-				accumulators[invertedList[i].docId] = accumulator;
+				accumulators[invertedList[i].doc_id] = accumulator;
 			}
 		}
 		
@@ -87,12 +88,12 @@ public:
 		map<int, Hit>::iterator ac = accumulators.begin();
 		
 		for(int i=0; i < maxHits && ac != accumulators.end(); i++, ac++){
-			ac->second.score = ac->second.score / ac->second.doc.length; //document length normalization
+			ac->second.score = ac->second.score / ac->second.length; //document length normalization
 			topDocs.push(ac->second);
 		}
 		
 		for(; ac != accumulators.end(); ac++){
-			ac->second.score = ac->second.score / ac->second.doc.length; //document length normalization
+			ac->second.score = ac->second.score / ac->second.length; //document length normalization
 			if(topDocs.top() < ac->second ){
 				topDocs.pop();
 				topDocs.push(ac->second);
@@ -101,7 +102,11 @@ public:
 		
 		vector<Hit> result;
 		while( !topDocs.empty() ){
-			result.push_back(topDocs.top());
+//			result.push_back(topDocs.top());
+//			topDocs.pop();
+			Hit hit = topDocs.top();
+			hit.doc = indexReader->getDoc(hit.doc.id);
+			result.push_back(hit);
 			topDocs.pop();
 		}
 		reverse(result.begin(), result.end());

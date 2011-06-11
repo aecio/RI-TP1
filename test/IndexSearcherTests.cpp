@@ -22,8 +22,8 @@ void should_return_instersection_set(){
 
 	//then
 	assert(v.size() == 2);
-	assert(v[0].docId == 2);
-	assert(v[1].docId == 4);
+	assert(v[0].doc_id == 2);
+	assert(v[1].doc_id == 4);
 }
 
 void should_return_union_set(){
@@ -39,10 +39,10 @@ void should_return_union_set(){
 
 	//then
 	assert(v.size() == 4);
-	assert(v[0].docId == 1);
-	assert(v[1].docId == 2);
-	assert(v[2].docId == 3);
-	assert(v[3].docId == 4);
+	assert(v[0].doc_id == 1);
+	assert(v[1].doc_id == 2);
+	assert(v[2].doc_id == 3);
+	assert(v[3].doc_id == 4);
 }
 
 void setUp(){

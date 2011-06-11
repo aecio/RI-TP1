@@ -58,7 +58,7 @@ public:
 		it = hits_bm25.begin();
 		for(; it != hits_bm25.end(); it++){
 			double normalized_bm25 = K * (it->score / max_bm25);
-			accumulators[it->doc.id] = Hit(normalized_bm25, it->doc);
+			accumulators[it->doc.id] = Hit(normalized_bm25, it->length, it->doc);
 		}
 		
 		//normalize vsm scores
@@ -74,7 +74,7 @@ public:
 			double normalized_vsm = (1-K) * (it->score / max_vsm);
 			map<int, Hit>::iterator hit = accumulators.find(it->doc.id);
 			if(hit == accumulators.end() ){
-				accumulators[it->doc.id] = Hit(normalized_vsm, it->doc);
+				accumulators[it->doc.id] = Hit(normalized_vsm, it->length, it->doc);
 			}else{
 				accumulators[it->doc.id].score += normalized_vsm;
 			}

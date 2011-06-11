@@ -18,10 +18,10 @@ void should_write_a_type_and_return_right_position(){
 	cout << ">>> should_write_a_type_and_return_right_position" << endl;
 	
 	SequenceFile<Occurrence> sf(SEQUENCE_TEST_FILE);
-	Occurrence oc1(1, 1, 1);
-	Occurrence oc2(2, 2, 2);
-	Occurrence oc3(3, 3, 3);
-	Occurrence oc4(4, 4, 4);
+	Occurrence oc1(1, 1, 1, 1);
+	Occurrence oc2(2, 2, 2, 1);
+	Occurrence oc3(3, 3, 3, 1);
+	Occurrence oc4(4, 4, 4, 1);
 	
 	assert(1 == sf.write(oc1));
 	assert(2 == sf.write(oc2));
@@ -35,11 +35,11 @@ void should_return_position_to_zero_when_rewind_is_called(){
 	//given
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
 		
-	Occurrence oc1(1, 1, 1);
+	Occurrence oc1(1, 1, 1, 1);
 	sequenceFile.write(oc1);
 	assert(sequenceFile.getPosition() == 1);
 	
-	Occurrence oc2(2, 2, 2);
+	Occurrence oc2(2, 2, 2, 1);
 	sequenceFile.write(oc2);
 	assert(sequenceFile.getPosition() == 2);
 	
@@ -56,7 +56,7 @@ void should_save_types_fields_values_correctly(){
 	
 	//given
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
-	Occurrence occurrenceToBeSaved(15, 15, 15);
+	Occurrence occurrenceToBeSaved(15, 15, 15, 1);
 
 	//when
 	sequenceFile.write(occurrenceToBeSaved);
@@ -65,9 +65,9 @@ void should_save_types_fields_values_correctly(){
 	sequenceFile.rewind();
 	Occurrence occurrenceRetrieved = sequenceFile.read();
 	
-	assert(occurrenceRetrieved.termId == 15);
-	assert(occurrenceRetrieved.termFrequencyInDoc == 15);
-	assert(occurrenceRetrieved.docId == 15);
+	assert(occurrenceRetrieved.term_id == 15);
+	assert(occurrenceRetrieved.term_frequency == 15);
+	assert(occurrenceRetrieved.doc_id == 15);
 }
 
 void should_return_false_if_is_at_last_entry(){
@@ -75,8 +75,8 @@ void should_return_false_if_is_at_last_entry(){
 	
 	//given
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
-	Occurrence oc1(1, 1, 1);
-	Occurrence oc2(2, 2, 2);
+	Occurrence oc1(1, 1, 1, 1);
+	Occurrence oc2(2, 2, 2, 1);
 	sequenceFile.write(oc1);
 	sequenceFile.write(oc2);
 	sequenceFile.rewind();
@@ -101,16 +101,16 @@ void should_write_and_read_the_same_values(){
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
 	
 	for(int i=1; i <= 5; i++) {
-		Occurrence oc(i, i, i);
+		Occurrence oc(i, i, i, 1);
 		sequenceFile.write(oc);
 	}
 	
 	int i=1;
 	while( sequenceFile.hasNext() ) {
 		Occurrence o = sequenceFile.read();
-		assert( o.termId == i );
-		assert( o.docId == i );
-		assert( o.termFrequencyInDoc == i );
+		assert( o.term_id == i );
+		assert( o.doc_id == i );
+		assert( o.term_frequency == i );
 		i++;
 	}
 }
@@ -120,9 +120,9 @@ void should_read_a_block_of_objects(){
 	
 	//given
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
-	Occurrence oc1(1, 1, 1);
-	Occurrence oc2(2, 2, 2);
-	Occurrence oc3(3, 3, 3);
+	Occurrence oc1(1, 1, 1, 1);
+	Occurrence oc2(2, 2, 2, 1);
+	Occurrence oc3(3, 3, 3, 1);
 	sequenceFile.write(oc1);
 	sequenceFile.write(oc2);
 	sequenceFile.write(oc3);
@@ -134,7 +134,7 @@ void should_read_a_block_of_objects(){
 	assert(size == 3);
 	
 	for(int i=0; i<size; i++){
-		assert(occurs[i].termId == i+1);
+		assert(occurs[i].term_id == i+1);
 	}
 }
 
@@ -143,9 +143,9 @@ void should_write_a_block_of_objects(){
 	
 	//given
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
-	Occurrence oc1(1, 1, 1);
-	Occurrence oc2(2, 2, 2);
-	Occurrence oc3(3, 3, 3);
+	Occurrence oc1(1, 1, 1, 1);
+	Occurrence oc2(2, 2, 2, 1);
+	Occurrence oc3(3, 3, 3, 1);
 
 	Occurrence occurs[] = {oc1, oc2, oc3};
 	sequenceFile.writeBlock(occurs, 3);
@@ -156,9 +156,9 @@ void should_write_a_block_of_objects(){
 	while( sequenceFile.hasNext() ){
 		i++;
 		Occurrence o = sequenceFile.read();
-		assert( o.termId == i );
-		assert( o.docId == i );
-		assert( o.termFrequencyInDoc == i );
+		assert( o.term_id == i );
+		assert( o.doc_id == i );
+		assert( o.term_frequency == i );
 	}
 	assert(i == 3);
 	assert(sequenceFile.getSize() == 3);
@@ -168,8 +168,8 @@ void should_return_correct_size_after_reopen(){
 	cout << ">>> should_return_correct_size_after_reopen" << endl;
 	//given
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
-	Occurrence oc1(1, 1, 1);
-	Occurrence oc2(2, 2, 2);
+	Occurrence oc1(1, 1, 1, 1);
+	Occurrence oc2(2, 2, 2, 1);
 	sequenceFile.write(oc1);
 	sequenceFile.write(oc2);
 	
@@ -185,9 +185,9 @@ void should_set_the_position_in_the_file(){
 	cout << ">>> should_set_the_position_in_the_file" << endl;
 	//given
 	SequenceFile<Occurrence> sequenceFile(SEQUENCE_TEST_FILE);
-	Occurrence oc1(0, 0, 0);
-	Occurrence oc2(1, 1, 1);
-	Occurrence oc3(2, 2, 2);
+	Occurrence oc1(0, 0, 0, 1);
+	Occurrence oc2(1, 1, 1, 1);
+	Occurrence oc3(2, 2, 2, 1);
 	sequenceFile.write(oc1);
 	sequenceFile.write(oc2);
 	sequenceFile.write(oc3);
@@ -197,25 +197,25 @@ void should_set_the_position_in_the_file(){
 	sequenceFile.setPosition(1);
 	//then
 	o = sequenceFile.read();
-	assert(o.termId == 1);
-	assert(o.termFrequencyInDoc == 1);
-	assert(o.docId == 1);
+	assert(o.term_id == 1);
+	assert(o.term_frequency == 1);
+	assert(o.doc_id == 1);
 	
 	//when
 	sequenceFile.setPosition(0);
 	//then
 	o = sequenceFile.read();
-	assert(o.termId == 0);
-	assert(o.termFrequencyInDoc == 0);
-	assert(o.docId == 0);
+	assert(o.term_id == 0);
+	assert(o.term_frequency == 0);
+	assert(o.doc_id == 0);
 
 	//when
 	sequenceFile.setPosition(2);
 	//then
 	o = sequenceFile.read();
-	assert(o.termId == 2);
-	assert(o.termFrequencyInDoc == 2);
-	assert(o.docId == 2);
+	assert(o.term_id == 2);
+	assert(o.term_frequency == 2);
+	assert(o.doc_id == 2);
 }
 
 void sequence_file_test_cases() {

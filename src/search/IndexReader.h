@@ -11,12 +11,14 @@
 #include <ctime>
 #include <string>
 #include <vector>
+#include <vector>
 
 class IndexReader {
 
 	Vocabulary* vocabulary;
 	SequenceFile<Pair>* invertedLists;
 	SequenceFile<Doc>* docsFile;
+	SequenceFile<int>* docLengthFile;
 	double avgDocLen;
 	
 public:
@@ -25,7 +27,7 @@ public:
 		vocabulary = new Vocabulary(directory + "/vocabulary");
 		invertedLists = new SequenceFile<Pair>(directory + "/index", false);
 		docsFile = new SequenceFile<Doc>(directory + "/urls", false);
-		
+		docLengthFile = new SequenceFile<int>(directory + "/doclength", false);
 		SequenceFile<double>* avgdoclenFile = new SequenceFile<double>(directory + "/avgdoclen", false);
 		avgDocLen = avgdoclenFile->read();
 		avgdoclenFile->close();
@@ -43,8 +45,20 @@ public:
 	Term* getTerm(string word){
 		cout << "Finding term " << word << endl;
 		Term* t = vocabulary->findTerm(word);
-		cout << "Term found " << t->term << endl;
 		return t;
+	}
+
+	vector<Pair> getDocFreqs(Term* term, int field) {
+		Pair* pairs = new Pair[term->getFieldFrequency(field)];
+		invertedLists->setPosition(term->getFieldListPosition(field));
+		invertedLists->readBlock(pairs, term->getFieldFrequency(field));
+		vector<Pair> docfreqs;
+		for(int i=0; i<term->getFieldFrequency(field); i++){
+			docfreqs.push_back(pairs[i]);
+		}
+		delete pairs;
+
+		return docfreqs;
 	}
 
 	Pair* getInvertedList(Term* term){
@@ -52,9 +66,9 @@ public:
 //		clock_t inicio_list = clock();
 		//###
 		
-		Pair* pairs = new Pair[term->docFrequency];
-		invertedLists->setPosition(term->listPosition);
-		invertedLists->readBlock(pairs, term->docFrequency);
+		Pair* pairs = new Pair[term->getFieldFrequency(CONTENT)];
+		invertedLists->setPosition(term->getFieldListPosition(CONTENT));
+		invertedLists->readBlock(pairs, term->getFieldFrequency(CONTENT));
 		
 		//###
 //		clock_t fim_list = clock();
@@ -81,6 +95,12 @@ public:
 		return doc;
 	}
 	
+	int getDocLength(int docId){
+		docLengthFile->setPosition(docId-1);
+		int length = docLengthFile->read();
+		return length;
+	}
+
 	double getAverageDocLength(){
 		return avgDocLen;
 	}

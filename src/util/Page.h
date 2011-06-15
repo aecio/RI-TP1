@@ -36,7 +36,7 @@ class Page {
 		tree<HTML::Node>::iterator it = dom.begin();
 		text += url;
 		for (; it != dom.end(); ++it) {
-			if(dom.parent(it) != NULL){
+			if(it.node != 0 && dom.parent(it) != NULL){
 				string parent_tag = dom.parent(it)->tagName();
 				//Pular código javascript
 				boost::to_lower(parent_tag);
@@ -55,6 +55,7 @@ class Page {
 				boost::to_lower(tagName);
 				if(tagName == "title"){
 					it++;
+					if(it == dom.end()) return;
 					title = it->text();
 				}
 				else if(tagName == "meta"){
@@ -85,6 +86,7 @@ class Page {
 						int children = it.number_of_children();
 						for(int i=0; i<children; i++){
 							it++;
+							if(it == dom.end()) return;
 							if(!it->isTag()) anchor_text += it->text();
 						}
 						links[HTML::convert_link(attrib.second, url)] = anchor_text;

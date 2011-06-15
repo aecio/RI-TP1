@@ -63,7 +63,7 @@ public:
 		int N = indexReader->getCollectionSize(); // N = Number of documents in the collection
 
 		Field fields[] = {TITLE, CONTENT, ANCHOR_TEXT, KEYWORDS, DESCRIPTION};
-		int fieldWeights[] = {5, 1, 0, 2, 2};
+		int fieldWeights[] = {3, 1, 1, 2, 2};
 
 		//Ranking calculation
 		map<int, Hit> accumulators;

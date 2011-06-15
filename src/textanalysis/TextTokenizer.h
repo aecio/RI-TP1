@@ -15,7 +15,9 @@ using namespace std;
 
 
 class TextTokenizer {
-	Stopwords* stopfile;
+
+	static Stopwords* stopfile;
+
 	string text;
 	unsigned int tokenStart;
 	unsigned int currentChar;
@@ -25,9 +27,11 @@ class TextTokenizer {
 	
 public:
 	TextTokenizer(string&);
+	~TextTokenizer();
 	
 	bool hasNext();
 	string nextToken();
+	void removeAccents(string &str);
 };
 
 #endif /* TEXTTOKENIZER_H_ */

@@ -18,8 +18,11 @@
 #include "index/Vocabulary.h"
 #include "index/Pair.h"
 #include "index/Doc.h"
+#include "index/TermFreq.h"
+#include "index/LinkTerm.h"
 #include "util/SequenceFile.h"
 #include "util/Page.h"
+#include "textanalysis/Analyzer.h"
 
 using namespace std;
 
@@ -36,16 +39,28 @@ class IndexWriter {
 	Occurrence* buffer;
 	int bufferSize;
 
+	Analyzer analyzer;
+
 	vector<SequenceFile<Occurrence>* > runs;
 	SequenceFile<Doc>* documentsFile;
 	SequenceFile<int>* docLenghtFile;
 
+	SequenceFile<int>* outDegreeFile;
+	SequenceFile<LinkTerm>* linksFile;
+	SequenceFile<int>* linkIdsFile;
+	SequenceFile<double>* pageRankFile;
+	SequenceFile<TermFreq>* anchorFile;
+
+	map<string, int> urls;
+
 public:
 
 	IndexWriter(string directory, int runSize = 500000);
+	~IndexWriter();
 
 	int addDocument(Page& page);
 	void proccessTerms(map<string, int> terms, Field field);
+	void processAnchorText(map<string, string> links);
 	void addOccurrence(int term_id, int doc_id, int frequency, int field);
 	void maybeFlush();
 	void flush();

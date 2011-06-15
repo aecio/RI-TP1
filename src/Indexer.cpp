@@ -57,6 +57,12 @@ int main(int argc, char* argv[]){
 
 	IndexWriter indexWriter(indexDirectory, runSize);
 
+//	cout << "Skipping documents..." << endl;
+//	for(int j=0; j<100000; j++){
+//		reader->getNextDocument(doc);
+//	}
+//	cout << "done" << endl;
+
 	int docsIndexed = 0;
 	cout << "Indexing documents..." << endl;
 	while(reader->getNextDocument(doc) && docsIndexed < numDocs){
@@ -72,6 +78,7 @@ int main(int argc, char* argv[]){
 		doc.clear();
 	}
 	indexWriter.commit();
+
 	return 0;
 }
 

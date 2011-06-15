@@ -17,8 +17,15 @@ class Analyzer {
 	map<string, int> terms;
 
 public:
-	Analyzer(string & text){
+	Analyzer(): length(0) {}
+
+	Analyzer(string text): length(0) {
+		analyze(text);
+	}
+
+	void analyze(string text){
 		length = 0;
+		terms.clear();
 		TextTokenizer tokenizer(text);
 		while(tokenizer.hasNext()){ 			//para cada termo "indexável"
 			string t = tokenizer.nextToken();
@@ -30,6 +37,7 @@ public:
 	map<string, int> getTermFreqs(){
 		return terms;
 	}
+
 
 	int getLength(){
 		return length;

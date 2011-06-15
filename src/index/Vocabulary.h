@@ -31,9 +31,7 @@ public:
 		while(sf.hasNext()){
 			Term term = sf.read();
 			terms.push_back(term);
-			
-			int& id = vocabulary[term.getTerm()];
-			id = terms.size();
+			vocabulary[term.getTerm()] = terms.size();
 		}
 		sf.close();
 	}
@@ -65,6 +63,10 @@ public:
 		}
 	}
 	
+	Term getTerm(int termId){
+		return terms[termId-1];
+	}
+
 	void setTermFieldPosition(int termId, int field, int position){
 		terms[termId-1].setFieldListPosition(field, position);
 	}

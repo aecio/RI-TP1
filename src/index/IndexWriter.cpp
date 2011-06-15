@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <ios>
 #include <list>
 #include <map>
 #include <sstream>
@@ -28,40 +30,93 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	directory = directory_;
 	docIdCounter = 0;
 	averageDocLength = 0;
-	documentsFile = new SequenceFile<Doc>(directory + "/urls");
+	documentsFile = new SequenceFile<Doc>(directory + "/docs");
 	docLenghtFile =  new SequenceFile<int>(directory + "/doclength");
+	outDegreeFile =  new SequenceFile<int>(directory + "/outdegrees");
+	anchorFile = new SequenceFile<TermFreq>(directory + "/anchors");
+	linksFile = new SequenceFile<LinkTerm>(directory + "/links");
+	linkIdsFile = new SequenceFile<int>(directory + "/linksIds");
+	pageRankFile = new  SequenceFile<double>(directory + "/pagerank");
+
 	buffer = new Occurrence[runSize];
 	bufferSize = 0;
+}
+
+IndexWriter::~IndexWriter(){
+
+	if(documentsFile != NULL){
+		documentsFile->close();
+		delete documentsFile;
+		documentsFile = NULL;
+	}
+
+	if(docLenghtFile != NULL){
+		docLenghtFile->close();
+		delete docLenghtFile;
+		docLenghtFile = NULL;
+	}
+
+	if(pageRankFile != NULL){
+		pageRankFile->close();
+		delete pageRankFile;
+		pageRankFile = NULL;
+	}
+
+	if(outDegreeFile != NULL){
+		outDegreeFile->close();
+		outDegreeFile->deleteFile();
+		delete outDegreeFile;
+		outDegreeFile = NULL;
+	}
+
+	if(anchorFile != NULL){
+		anchorFile->close();
+		anchorFile->deleteFile();
+		delete anchorFile;
+		anchorFile = NULL;
+	}
+
+	if(linksFile != NULL){
+		linksFile->close();
+		linksFile->deleteFile();
+		delete linksFile;
+		linksFile = NULL;
+	}
+
+	if(linkIdsFile != NULL){
+		linkIdsFile->close();
+		linkIdsFile->deleteFile();
+		delete linkIdsFile;
+		linkIdsFile = NULL;
+	}
 }
 	
 int IndexWriter::addDocument(Page& page) {
 	docIdCounter++;
 
-	string text = page.getText();
-	string title = page.getTitle();
-//	string anchor = page.getAnchorText();
-	string description = page.getDescription();
-	string keywords = page.getKeywords();
+	analyzer.analyze(page.getTitle());
+	proccessTerms(analyzer.getTermFreqs(), TITLE);
 
-	Analyzer contentAnalyzer(text);
-	Analyzer titleAnalyzer(title);
-//	Analyzer anchorAnalyzer(achor);
-	Analyzer descriptionAnalyzer(description);
-	Analyzer keywordsAnalyzer(keywords);
+	analyzer.analyze(page.getDescription());
+	proccessTerms(analyzer.getTermFreqs(), DESCRIPTION);
 
-	proccessTerms(contentAnalyzer.getTermFreqs(), CONTENT);
-	proccessTerms(titleAnalyzer.getTermFreqs(), TITLE);
-//	proccessTerms(achorAnalyzer.getTermFreqs(), ANCHOR_TEXT);
-	proccessTerms(descriptionAnalyzer.getTermFreqs(), DESCRIPTION);
-	proccessTerms(keywordsAnalyzer.getTermFreqs(), KEYWORDS);
+	analyzer.analyze(page.getKeywords());
+	proccessTerms(analyzer.getTermFreqs(), KEYWORDS);
+
+	analyzer.analyze(page.getText());
+	proccessTerms(analyzer.getTermFreqs(), CONTENT);
+    int docLength = analyzer.getLength();
+
+    docLenghtFile->write(docLength);
+	averageDocLength += docLength;
 
 	Doc doc(docIdCounter, page.getUrl(), page.getTitle(), page.getDescription());
 	documentsFile->write(doc);
-
-    int docLength = contentAnalyzer.getLength();
-    docLenghtFile->write(docLength);
-	averageDocLength += docLength;
 	
+	urls[page.getUrl()] = docIdCounter;
+
+	processAnchorText(page.getLinks());
+
 	return docIdCounter;
 }
 
@@ -70,6 +125,31 @@ void IndexWriter::proccessTerms(map<string, int> terms, Field field){
 	for(; it != terms.end(); it++){
 		int termId = vocabulary.addTerm(it->first);
 		addOccurrence(termId, docIdCounter, it->second, field);
+	}
+}
+
+void IndexWriter::processAnchorText(map<string, string> links){
+	//Escrever out-degree da pagina $docIdCounter
+	int outDegree = links.size();
+	outDegreeFile->write(outDegree);
+
+	//Guardar links da pagina $docIdCounter
+	map<string, string>::iterator it = links.begin();
+	for(;it != links.end(); it++){
+		analyzer.analyze(it->second);
+		map<string, int> terms = analyzer.getTermFreqs();
+
+		//Guardar link e quantidade de termos
+		LinkTerm lt(it->first, terms.size());
+		linksFile->write(lt);
+
+		//Guardar frequencias dos termos
+		map<string, int>::iterator anchorTerm = terms.begin();
+		for(; anchorTerm != terms.end(); anchorTerm++){
+			int termId = vocabulary.addTerm(anchorTerm->first);
+			TermFreq tf(termId, anchorTerm->second);
+			anchorFile->write(tf);
+		}
 	}
 }
 
@@ -107,25 +187,110 @@ void IndexWriter::flush(){
 }
 
 void IndexWriter::commit() {
+	/** ANCHOR TEXT */
+	anchorFile->rewind();
+	linksFile->rewind();
 
+	cout << "Computing anchor text..." << endl;
+	while(linksFile->hasNext()){
+		LinkTerm lt = linksFile->read();
+		map<string, int>::iterator url = urls.find(lt.getLink());
+		int docId;
+		if(url == urls.end()){
+			docId = -1; //documento que não existe na coleção
+		}else{
+			docId = url->second;
+		}
+		linkIdsFile->write(docId); //Guarda Id na mesma ordem para computação do PageRank
+
+		for(int j=0; j < lt.getTermsNumber(); j++){
+			TermFreq tf = anchorFile->read();
+			if(docId != -1){
+				addOccurrence(tf.getTermId(), docId, tf.getFrequency(), ANCHOR_TEXT);
+			}
+		}
+	}
+
+
+	/** FLUSH & MERGE */
+	cout << "Finishing index merge..." << endl;
 	flush();
-
 	SequenceFile<Occurrence>* occurrencesSorted = kwaymerge(runs);
-
 	createInvertedFile(occurrencesSorted);
-
 	occurrencesSorted->deleteFile();
 	
 	vocabulary.saveTo(directory + "/vocabulary");
-	
 	documentsFile->close();
 	
 	SequenceFile<double>* avgdoclen = new SequenceFile<double>(directory + "/avgdoclen");
 	double average = averageDocLength / docIdCounter;
 	avgdoclen->write(average);
 	avgdoclen->close();
-	
+	delete avgdoclen;
 	cout << "Average document length: " << average << endl;
+
+	delete buffer;
+
+	/** PAGE RANK **/
+	cout << "Computing PageRank..." << endl;
+
+	double* source = new double[docIdCounter];
+	double* dest = new double[docIdCounter];
+	int* outdegrees = new int[docIdCounter];
+
+	outDegreeFile->rewind();
+	outDegreeFile->readBlock(outdegrees, docIdCounter);
+
+	double q = 0.15; //constant
+
+	for(int i=0;i<docIdCounter;i++) {
+		source[i] = 1/docIdCounter;
+	}
+
+	for(int iteration = 0; iteration < 50; iteration++){
+		linkIdsFile->rewind();
+
+		for(int i=0; i<docIdCounter; i++) {
+			dest[i] = 0;
+		}
+
+		for(int docId=0; docId<docIdCounter; docId++) {
+			double rank;
+			if(outdegrees[docId] == 0)
+				rank = 0;
+			else
+				rank = source[docId] / outdegrees[docId];
+
+			for(int i=0; i < outdegrees[docId]; i++){
+				int destLinkId = linkIdsFile->read();
+				dest[destLinkId-1] += rank;
+			}
+		}
+
+		for(int i=0; i<docIdCounter; i++) {
+			dest[i] = (q / docIdCounter) + (1-q) * dest[i];
+
+			//@@@
+//			if(iteration == 49){
+//				linksFile->setPosition(i);
+//				LinkTerm lt = linksFile->read();
+//				cout << setw(4) << i+1 << " = " << setw(10) << fixed << dest[i] << "\t" << lt.getLink() << endl;
+//			}
+			//@@@
+		}
+
+		double* temp = source;
+		source = dest;
+		dest = temp;
+	}
+
+	//Save PageRank
+	pageRankFile->writeBlock(source, docIdCounter);
+	pageRankFile->close();
+
+	delete [] source;
+	delete [] dest;
+	delete [] outdegrees;
 
 	cout << "Done." << endl;
 }
@@ -281,17 +446,14 @@ SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of
 			if(termId != occurrence.term_id){
 				termId = occurrence.term_id;
 				field = -1;
-//				cout << "Escrenvendo lista para termo: " << termId << endl;
 			}
 
 			if(field != occurrence.field){
 				field = occurrence.field;
 				vocabulary.setTermFieldPosition(occurrence.term_id, occurrence.field, index->getPosition());
-//				cout << "Campo: " << occurrence.field << endl;
 			}
 
 			Pair entry(occurrence.doc_id, occurrence.term_frequency);
-//			cout << "(" << occurrence.doc_id << "," << occurrence.term_frequency <<")" << endl;
 			index->write(entry);
 
 			vocabulary.incrementTermFieldFrequency(occurrence.term_id, occurrence.field);

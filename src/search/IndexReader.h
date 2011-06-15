@@ -56,7 +56,7 @@ public:
 		for(int i=0; i<term->getFieldFrequency(field); i++){
 			docfreqs.push_back(pairs[i]);
 		}
-		delete pairs;
+		delete [] pairs;
 
 		return docfreqs;
 	}

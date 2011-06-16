@@ -11,9 +11,9 @@
 #include <string>
 #include <stdlib.h>
 
-#define URL_SIZE 1000
-#define TITLE_SIZE 300
-#define DESCRIPTION_SIZE 4000
+#define URL_SIZE 350
+#define TITLE_SIZE 20
+#define DESCRIPTION_SIZE 3000
 
 using namespace std;
 
@@ -33,9 +33,16 @@ public:
 		truncString(descriptionStr, description, DESCRIPTION_SIZE);
 	}
 
-	void truncString(string str, char* c_str, int maxSize){
+	void truncString(string str, char* c_str, unsigned int maxSize){
 		int length = str.copy(c_str, maxSize);
-		c_str[length] = '\0';
+		if(str.size() > (unsigned) length && length > 3){
+			c_str[length-3] = '.';
+			c_str[length-2] = '.';
+			c_str[length-1] = '.';
+			c_str[length] = '\0';
+		} else {
+			c_str[length] = '\0';
+		}
 	}
 
 	int getId(){

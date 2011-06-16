@@ -19,6 +19,7 @@ class IndexReader {
 	SequenceFile<Pair>* invertedLists;
 	SequenceFile<Doc>* docsFile;
 	SequenceFile<int>* docLengthFile;
+	SequenceFile<double>* pageRankFile;
 	double avgDocLen;
 	
 public:
@@ -26,8 +27,10 @@ public:
 	IndexReader(string directory) {
 		vocabulary = new Vocabulary(directory + "/vocabulary");
 		invertedLists = new SequenceFile<Pair>(directory + "/index", false);
-		docsFile = new SequenceFile<Doc>(directory + "/urls", false);
+		docsFile = new SequenceFile<Doc>(directory + "/docs", false);
 		docLengthFile = new SequenceFile<int>(directory + "/doclength", false);
+		pageRankFile = new  SequenceFile<double>(directory + "/pagerank", false);
+
 		SequenceFile<double>* avgdoclenFile = new SequenceFile<double>(directory + "/avgdoclen", false);
 		avgDocLen = avgdoclenFile->read();
 		avgdoclenFile->close();
@@ -43,7 +46,6 @@ public:
 	}
 	
 	Term* getTerm(string word){
-		cout << "Finding term " << word << endl;
 		Term* t = vocabulary->findTerm(word);
 		return t;
 	}
@@ -62,39 +64,23 @@ public:
 	}
 
 	Pair* getInvertedList(Term* term){
-		//###
-//		clock_t inicio_list = clock();
-		//###
-		
 		Pair* pairs = new Pair[term->getFieldFrequency(CONTENT)];
 		invertedLists->setPosition(term->getFieldListPosition(CONTENT));
 		invertedLists->readBlock(pairs, term->getFieldFrequency(CONTENT));
-		
-		//###
-//		clock_t fim_list = clock();
-//		double total_list = ((double)(fim_list-inicio_list)) / (double) (CLOCKS_PER_SEC/1000);
-//		printf("Tempo para ler lista do termo %s: %.3f ms\n", term->term, total_list);
-		//###
-		
 		return pairs;
 	}
 	
 	Doc getDoc(int docId){
-		//###
-//		clock_t inicio_pair = clock();
-		//###
-		
 		docsFile->setPosition(docId-1);
 		Doc doc = docsFile->read();
-		
-		//###
-//		clock_t fim_pair = clock();
-//		double total = ((double)(fim_pair-inicio_pair)) / (double) (CLOCKS_PER_SEC/1000);
-//		printf("Tempo para ler doc %i: %.3f ms\n", docId, total);
-		//###
 		return doc;
 	}
 	
+	double getPageRank(int docId){
+		pageRankFile->setPosition(docId-1);
+		return pageRankFile->read();
+	}
+
 	int getDocLength(int docId){
 		docLengthFile->setPosition(docId-1);
 		int length = docLengthFile->read();

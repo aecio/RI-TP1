@@ -8,8 +8,6 @@
 #ifndef LINKTERM_H_
 #define LINKTERM_H_
 
-#define URL_SIZE 1000
-
 class LinkTerm {
 	char link[URL_SIZE];
 	int terms_number;

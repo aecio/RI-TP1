@@ -13,6 +13,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <boost/unordered_map.hpp>
 #include "index/Field.h"
 #include "index/Occurrence.h"
 #include "index/Vocabulary.h"
@@ -51,7 +52,7 @@ class IndexWriter {
 	SequenceFile<double>* pageRankFile;
 	SequenceFile<TermFreq>* anchorFile;
 
-	map<string, int> urls;
+	 boost::unordered_map<string, int> urls;
 
 public:
 

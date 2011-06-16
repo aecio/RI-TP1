@@ -103,6 +103,9 @@ int IndexWriter::addDocument(Page& page) {
 	analyzer.analyze(page.getKeywords());
 	proccessTerms(analyzer.getTermFreqs(), KEYWORDS);
 
+	analyzer.analyze(page.getUrl());
+	proccessTerms(analyzer.getTermFreqs(), URL);
+
 	analyzer.analyze(page.getText());
 	proccessTerms(analyzer.getTermFreqs(), CONTENT);
     int docLength = analyzer.getLength();
@@ -112,8 +115,9 @@ int IndexWriter::addDocument(Page& page) {
 
 	Doc doc(docIdCounter, page.getUrl(), page.getTitle(), page.getDescription());
 	documentsFile->write(doc);
-	
-	urls[page.getUrl()] = docIdCounter;
+
+	string url(page.getUrl(), 0 , URL_SIZE);
+	urls[url] = docIdCounter;
 
 	processAnchorText(page.getLinks());
 
@@ -194,7 +198,7 @@ void IndexWriter::commit() {
 	cout << "Computing anchor text..." << endl;
 	while(linksFile->hasNext()){
 		LinkTerm lt = linksFile->read();
-		map<string, int>::iterator url = urls.find(lt.getLink());
+		boost::unordered_map<string, int>::iterator url = urls.find(lt.getLink());
 		int docId;
 		if(url == urls.end()){
 			docId = -1; //documento que não existe na coleção
@@ -229,7 +233,7 @@ void IndexWriter::commit() {
 	delete avgdoclen;
 	cout << "Average document length: " << average << endl;
 
-	delete buffer;
+	delete [] buffer;
 
 	/** PAGE RANK **/
 	cout << "Computing PageRank..." << endl;
@@ -247,7 +251,7 @@ void IndexWriter::commit() {
 		source[i] = 1/docIdCounter;
 	}
 
-	for(int iteration = 0; iteration < 50; iteration++){
+	for(int iteration = 0; iteration < 70; iteration++){
 		linkIdsFile->rewind();
 
 		for(int i=0; i<docIdCounter; i++) {
@@ -261,20 +265,29 @@ void IndexWriter::commit() {
 			else
 				rank = source[docId] / outdegrees[docId];
 
+			int destLinkId[outdegrees[docId]];
+			linkIdsFile->readBlock(destLinkId, outdegrees[docId]);
 			for(int i=0; i < outdegrees[docId]; i++){
-				int destLinkId = linkIdsFile->read();
-				dest[destLinkId-1] += rank;
+				dest[destLinkId[i]-1] += rank;
 			}
+		}
+
+		if(iteration == 69) {
+			documentsFile->reopen();
+//			documentsFile->rewind();
 		}
 
 		for(int i=0; i<docIdCounter; i++) {
 			dest[i] = (q / docIdCounter) + (1-q) * dest[i];
 
 			//@@@
-//			if(iteration == 49){
+//			if(iteration == 69){
 //				linksFile->setPosition(i);
 //				LinkTerm lt = linksFile->read();
-//				cout << setw(4) << i+1 << " = " << setw(10) << fixed << dest[i] << "\t" << lt.getLink() << endl;
+//				documentsFile->setPosition(i);
+//				Doc doc = documentsFile->read();
+//				cout << setw(4) << i+1 << " = " << setw(10) << fixed << dest[i] << "\t" << doc.getUrl() << endl;
+//				cout << doc.getTitle() << endl;
 //			}
 			//@@@
 		}
@@ -287,6 +300,17 @@ void IndexWriter::commit() {
 	//Save PageRank
 	pageRankFile->writeBlock(source, docIdCounter);
 	pageRankFile->close();
+//	pageRankFile->rewind();
+//	//@@@
+//	int i=0;
+//	while(pageRankFile->hasNext()){
+//		linksFile->setPosition(i);
+//		LinkTerm lt = linksFile->read();
+//		cout << setw(4) << i+1 << " = " << setw(10) << fixed << pageRankFile->read() << "\t" << lt.getLink() << endl;
+//		i++;
+//	}
+//	//@@@
+
 
 	delete [] source;
 	delete [] dest;
@@ -358,36 +382,36 @@ SequenceFile<Occurrence>* IndexWriter::kwaymerge(vector<SequenceFile<Occurrence>
 
 SequenceFile<Occurrence>* IndexWriter::merge(vector<SequenceFile<Occurrence>*>& runs) {
 	cout << "Merging " << runs.size() <<" runs..." << endl;
-	
+
 	if(runs.size() == 1){
 		cout << "Only one Run. No need to merge." << endl;
 		return runs.front();
 	}
-	
+
 	SequenceFile<Occurrence>* merged = 0;
 	SequenceFile<Occurrence>* run1 = 0;
 	SequenceFile<Occurrence>* run2 = 0;
-	
+
 	int id = 0;
 	while(runs.size() > 1) {
 		run1 = runs.front();
 		runs.erase(runs.begin());
-		
+
 		run2 = runs.front();
 		runs.erase(runs.begin());
-	
+
 		stringstream name;
 		name << directory << "/temp" << id++;
 		merged = new SequenceFile<Occurrence>( name.str() );
-		
+
 		merge2runs(run1, run2, merged);
-		
+
 		run1->deleteFile();
 		run2->deleteFile();
-		
+
 		runs.push_back(merged);
 	}
-	
+
 	cout << "Runs merged into one file with " << runs.front()->getSize() << " entries." << endl;
 	return runs.front();
 }
@@ -395,18 +419,18 @@ SequenceFile<Occurrence>* IndexWriter::merge(vector<SequenceFile<Occurrence>*>& 
 void IndexWriter::merge2runs(SequenceFile<Occurrence>* runA,
 							 SequenceFile<Occurrence>* runB,
 							 SequenceFile<Occurrence>* mergedFile ) {
-							 	
+
 	runA->reopen();
 	runB->reopen();
 	mergedFile->reopen();
-	
+
 	cout << "Merging "<< runA->getName() <<" and "<< runB->getName() << " into " << mergedFile->getName() << endl;
 	cout << runA->getName() << " size: " << runA->getSize() << endl;
 	cout << runB->getName() << " size: " << runB->getSize() << endl;
-	
+
 	Occurrence headA = runA->read();
 	Occurrence headB = runB->read();
-	
+
 	while ( (runA->getPosition() <= runA->getSize()) && runB->getPosition() <= runB->getSize() ) {
 		if(headA < headB){
 			mergedFile->write(headA);
@@ -416,18 +440,18 @@ void IndexWriter::merge2runs(SequenceFile<Occurrence>* runA,
 			headB = runB->read();
 		}
 	}
-	
+
 	while( runA->getPosition() <= runA->getSize() ){
 		mergedFile->write(headA);
 		headA = runA->read();
 	}
-	
+
 	while( runB->getPosition() <= runB->getSize() ){
 		mergedFile->write(headB);
 		headB = runB->read();
 	}
-	
-	cout << "Finished merging "<< mergedFile->getName() <<" with " 
+
+	cout << "Finished merging "<< mergedFile->getName() <<" with "
 		 << mergedFile->getSize() << " entries." << endl << endl;
 }
 

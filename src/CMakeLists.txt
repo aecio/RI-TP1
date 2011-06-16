@@ -15,6 +15,8 @@ SET (PROJECT_SOURCE index/IndexWriter.h
 					search/BM25IndexSearcher.h
 					search/VSMIndexSearcher.h
 					search/BooleanIndexSearcher.h
+					search/PageRankSearcher.h
+					search/CombinedIndexSearcher.h
 					util/Page.h
 					util/SequenceFile.h)
 

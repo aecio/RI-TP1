@@ -62,8 +62,8 @@ public:
 		double K1 = 0.5; //Empirical constant. k1 = 1 works well with real collections
 		int N = indexReader->getCollectionSize(); // N = Number of documents in the collection
 
-		Field fields[] = {TITLE, CONTENT, ANCHOR_TEXT, KEYWORDS, DESCRIPTION};
-		int fieldWeights[] = {3, 1, 1, 2, 2};
+		Field fields[] = {URL, TITLE, CONTENT, ANCHOR_TEXT, KEYWORDS, DESCRIPTION};
+		int fieldWeights[] = {3, 3, 1, 1, 2, 2};
 
 		//Ranking calculation
 		map<int, Hit> accumulators;
@@ -83,10 +83,10 @@ public:
 			//dos respectivos campos.
 
 			vector<Pair> invertedList;
-			for(int i=0; i<5; i++){
-				vector<Pair> list = indexReader->getDocFreqs(term, fields[i]); //nao existe ainda
+			for(int field=0; field<6; field++){
+				vector<Pair> list = indexReader->getDocFreqs(term, fields[field]);
 				for(unsigned int j=0; j<list.size(); j++){
-					Pair doc_freq(list[j].doc_id, list[j].frequency_dt * fieldWeights[i]);
+					Pair doc_freq(list[j].doc_id, list[j].frequency_dt * fieldWeights[field]);
 					invertedList.push_back(doc_freq);
 				}
 			}

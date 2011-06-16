@@ -58,7 +58,7 @@ int main(int argc, char* argv[]){
 	IndexWriter indexWriter(indexDirectory, runSize);
 
 //	cout << "Skipping documents..." << endl;
-//	for(int j=0; j<100000; j++){
+//	for(int j=0; j<314411; j++){
 //		reader->getNextDocument(doc);
 //	}
 //	cout << "done" << endl;

@@ -10,11 +10,13 @@
 #include <Wt/WGroupBox>
 #include <Wt/WRadioButton>
 #include <Wt/WButtonGroup>
+#include <Wt/WImage>
 #include <search/IndexSearcher.h>
 #include <search/VSMIndexSearcher.h>
 #include <search/BM25IndexSearcher.h>
 #include <search/CombinedIndexSearcher.h>
 #include <search/MultiFieldIndexSearcher.h>
+#include <search/PageRankSearcher.h>
 
 using namespace Wt;
 
@@ -24,7 +26,7 @@ public:
 	WebSearcher(const WEnvironment& env);
 	
 private:
-	enum IRModel { BM25 = 1, Vector = 2, Combined = 3, MultiField = 4};
+	enum IRModel { BM25 = 1, Vector = 2, Combined = 3, MultiField = 4, PageRank = 5};
 	
 	IndexSearcher* searcher;
 	IndexReader* reader;
@@ -37,6 +39,7 @@ private:
 	void btnBM25Handler();
 	void btnMixedModelHandler();
 	void btnMultiFieldModelHandler();
+	void btnPageRankModelHandler();
 };
 
 WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
@@ -45,7 +48,10 @@ WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
 	root()->setMargin(200, Left);
 	root()->setMargin(200, Right);
 
-	root()->addWidget(new WText("What are you looking for?<br/>"));
+//	root()->addWidget(new WText("What are you looking for?<br/>"));
+	WImage *img = new WImage("logo-dcc640x428.gif", root());
+	img->setAttributeValue("style", "display:block; height: 100px;");
+	img->setAlternateText("Web Searcher");
 
 	edtQuery = new WLineEdit(root());
 	edtQuery->setFocus();
@@ -64,7 +70,7 @@ WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
 	
 	WGroupBox *container = new WGroupBox("Information Retrieval Model", root());
 
-	// use a button group to logically group the 3 options
+	// use a button group to logically group the options
 	WButtonGroup *bgModel = new WButtonGroup(this);
 
 	WRadioButton *button;
@@ -84,21 +90,14 @@ WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
 	button->clicked().connect(this, &WebSearcher::btnMultiFieldModelHandler);
 	bgModel->addButton(button, MultiField);
 
+	button = new WRadioButton("PageRank", container);
+	button->clicked().connect(this, &WebSearcher::btnPageRankModelHandler);
+	bgModel->addButton(button, PageRank);
+
 	bgModel->setCheckedButton(bgModel->button(BM25));
 	
 	reader = new IndexReader("indice");
-	
-	switch(bgModel->checkedId()){
-		case Vector:
-			searcher = new VSMIndexSearcher(reader);
-			break;
-		case Combined:
-			searcher = new CombinedIndexSearcher(reader);
-			break;
-		case BM25:
-		default:
-			searcher = new BM25IndexSearcher(reader);
-	}
+	searcher = new BM25IndexSearcher(reader);
 }
 
 void WebSearcher::btnVectorHandler(){
@@ -123,6 +122,12 @@ void WebSearcher::btnMixedModelHandler(){
 	cout << "Changing model to: VSM & BM25 Combined." << endl;
 	delete searcher;
 	searcher = new CombinedIndexSearcher(reader);
+}
+
+void WebSearcher::btnPageRankModelHandler(){
+	cout << "Changing model to: PageRank & BM25" << endl;
+	delete searcher;
+	searcher = new PageRankSearcher(reader);
 }
 
 void WebSearcher::search() {

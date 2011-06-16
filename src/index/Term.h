@@ -16,6 +16,9 @@ using namespace std;
 class Term {
 	char term[30];
 
+	int urlFrequency;
+	int urlPosition;
+
 	int titlePosition;
 	int titleFrequency;
 
@@ -37,7 +40,9 @@ public:
 		contentFrequency = 0;
 	}
 	
-	Term(string termStr):	titlePosition(0),
+	Term(string termStr):	urlFrequency(0),
+							urlPosition(0),
+							titlePosition(0),
 							titleFrequency(0),
 							contentFrequency(0),
 							contentPosition(0),
@@ -63,6 +68,9 @@ public:
 
 	void setFieldListPosition(int field, int position){
 		switch(field){
+			case URL:
+				urlPosition = position;
+				break;
 			case CONTENT:
 				contentPosition = position;
 				break;
@@ -83,6 +91,9 @@ public:
 
 	int getFieldListPosition(int field){
 		switch(field){
+			case URL:
+				return urlPosition;
+				break;
 			case CONTENT:
 				return contentPosition;
 				break;
@@ -104,6 +115,9 @@ public:
 
 	int getFieldFrequency(int field){
 		switch(field){
+			case URL:
+				return urlFrequency;
+				break;
 			case CONTENT:
 				return contentFrequency;
 				break;
@@ -125,6 +139,9 @@ public:
 
 	void incrementFieldFrequency(int field){
 		switch(field){
+			case URL:
+				urlFrequency++;
+				break;
 			case CONTENT:
 				contentFrequency++;
 				break;

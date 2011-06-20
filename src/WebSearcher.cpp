@@ -28,8 +28,8 @@ public:
 private:
 	enum IRModel { BM25 = 1, Vector = 2, Combined = 3, MultiField = 4, PageRank = 5};
 	
+	static IndexReader* reader;
 	IndexSearcher* searcher;
-	IndexReader* reader;
 	WButtonGroup* bgModel;
 	WLineEdit *edtQuery;
 	WGroupBox *gbxResults;		
@@ -41,6 +41,8 @@ private:
 	void btnMultiFieldModelHandler();
 	void btnPageRankModelHandler();
 };
+
+IndexReader* WebSearcher::reader = new IndexReader("indice");
 
 WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
 	setTitle("Web Searcher");
@@ -96,7 +98,7 @@ WebSearcher::WebSearcher(const WEnvironment& env) : WApplication(env) {
 
 	bgModel->setCheckedButton(bgModel->button(BM25));
 	
-	reader = new IndexReader("indice");
+//	reader = new IndexReader("indice");
 	searcher = new BM25IndexSearcher(reader);
 }
 
@@ -183,5 +185,6 @@ WApplication *createApplication(const WEnvironment& env) {
 }
 
 int main(int argc, char **argv) {
-  return WRun(argc, argv, &createApplication);
+	cout << "Iniciando WebSearcher..." << endl;
+	return WRun(argc, argv, &createApplication);
 }

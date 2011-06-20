@@ -50,7 +50,7 @@ public:
 
 	~BufferedFile() {
 		if (freeMemoryAfter) {
-			delete buffer;
+			delete [] buffer;
 			buffer = NULL;
 		}
 	}

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <vector>
+#include "index/IndexWriter.cpp"
 
 class IndexReader {
 
@@ -25,20 +26,25 @@ class IndexReader {
 public:
 
 	IndexReader(string directory) {
-		vocabulary = new Vocabulary(directory + "/vocabulary");
-		invertedLists = new SequenceFile<Pair>(directory + "/index", false);
-		docsFile = new SequenceFile<Doc>(directory + "/docs", false);
-		docLengthFile = new SequenceFile<int>(directory + "/doclength", false);
-		pageRankFile = new  SequenceFile<double>(directory + "/pagerank", false);
+		vocabulary = new Vocabulary(directory + "/" + VOCABULARY_FILE);
+		invertedLists = new SequenceFile<Pair>(directory + "/" + INDEX_FILE, false);
+		docsFile = new SequenceFile<Doc>(directory + "/" + DOCUMENTS_FILE, false);
+		docLengthFile = new SequenceFile<int>(directory + "/" + DOC_LENGTH_FILE, false);
+		pageRankFile = new  SequenceFile<double>(directory + "/" + PAGERANK_FILE, false);
 
-		SequenceFile<double>* avgdoclenFile = new SequenceFile<double>(directory + "/avgdoclen", false);
-		avgDocLen = avgdoclenFile->read();
-		avgdoclenFile->close();
+
+		cout << "Tamanaho da lista invertida: " << invertedLists->getSize() << endl;
+
+		SequenceFile<double> avgdoclenFile(directory + "/" + AVG_DOC_LENGTH_FILE, false);
+		avgDocLen = avgdoclenFile.read();
+		avgdoclenFile.close();
 	}
 	
 	~IndexReader(){
 		invertedLists->close();
 		docsFile->close();
+		docLengthFile->close();
+		pageRankFile->close();
 	}
 	
 	int getCollectionSize(){
@@ -64,6 +70,7 @@ public:
 	}
 
 	Pair* getInvertedList(Term* term){
+		//TODO: Desalocar memória!
 		Pair* pairs = new Pair[term->getFieldFrequency(CONTENT)];
 		invertedLists->setPosition(term->getFieldListPosition(CONTENT));
 		invertedLists->readBlock(pairs, term->getFieldFrequency(CONTENT));

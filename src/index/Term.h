@@ -36,9 +36,18 @@ class Term {
 	
 public:
 
-	Term() {
-		contentFrequency = 0;
-	}
+	Term():	urlFrequency(0),
+			urlPosition(0),
+			titlePosition(0),
+			titleFrequency(0),
+			contentFrequency(0),
+			contentPosition(0),
+			anchorTextPosition(0),
+			anchorTextFrequency(0),
+			keywordsPosition(0),
+			keywordsFrequency(0),
+			descriptionPosition(0),
+			descriptionFrequency(0) {}
 	
 	Term(string termStr):	urlFrequency(0),
 							urlPosition(0),

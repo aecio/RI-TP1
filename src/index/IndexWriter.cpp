@@ -23,6 +23,14 @@
 #include "util/SequenceFile.h"
 #include "util/BufferedFile.h"
 
+#define INDEX_FILE "index"
+#define VOCABULARY_FILE "vocabulary"
+#define DOCUMENTS_FILE "docs"
+#define DOC_LENGTH_FILE "doclength"
+#define AVG_DOC_LENGTH_FILE "avgdoclen"
+#define PAGERANK_FILE "pagerank"
+#define PAGERANK_ITERATIONS 70
+
 using namespace std;
 	
 IndexWriter::IndexWriter(string directory_, int runSize_){
@@ -30,19 +38,27 @@ IndexWriter::IndexWriter(string directory_, int runSize_){
 	directory = directory_;
 	docIdCounter = 0;
 	averageDocLength = 0;
-	documentsFile = new SequenceFile<Doc>(directory + "/docs");
-	docLenghtFile =  new SequenceFile<int>(directory + "/doclength");
+
+	documentsFile = new SequenceFile<Doc>(directory + "/" + DOCUMENTS_FILE);
+	docLenghtFile =  new SequenceFile<int>(directory + "/" + DOC_LENGTH_FILE);
+
 	outDegreeFile =  new SequenceFile<int>(directory + "/outdegrees");
-	anchorFile = new SequenceFile<TermFreq>(directory + "/anchors");
-	linksFile = new SequenceFile<LinkTerm>(directory + "/links");
 	linkIdsFile = new SequenceFile<int>(directory + "/linksIds");
-	pageRankFile = new  SequenceFile<double>(directory + "/pagerank");
+
+	linksStream.open((directory + "/links").c_str(), ios::in | ios::out | ios::trunc);
+	termsStream.open((directory + "/termsNumber").c_str(), ios::in | ios::out | ios::trunc);
 
 	buffer = new Occurrence[runSize];
 	bufferSize = 0;
 }
 
 IndexWriter::~IndexWriter(){
+
+	linksStream.close();
+//	remove((directory + "/links").c_str());
+
+	termsStream.close();
+//	remove((directory + "/termsNumber").c_str());
 
 	if(documentsFile != NULL){
 		documentsFile->close();
@@ -56,31 +72,11 @@ IndexWriter::~IndexWriter(){
 		docLenghtFile = NULL;
 	}
 
-	if(pageRankFile != NULL){
-		pageRankFile->close();
-		delete pageRankFile;
-		pageRankFile = NULL;
-	}
-
 	if(outDegreeFile != NULL){
 		outDegreeFile->close();
 		outDegreeFile->deleteFile();
 		delete outDegreeFile;
 		outDegreeFile = NULL;
-	}
-
-	if(anchorFile != NULL){
-		anchorFile->close();
-		anchorFile->deleteFile();
-		delete anchorFile;
-		anchorFile = NULL;
-	}
-
-	if(linksFile != NULL){
-		linksFile->close();
-		linksFile->deleteFile();
-		delete linksFile;
-		linksFile = NULL;
 	}
 
 	if(linkIdsFile != NULL){
@@ -137,22 +133,17 @@ void IndexWriter::processAnchorText(map<string, string> links){
 	int outDegree = links.size();
 	outDegreeFile->write(outDegree);
 
-	//Guardar links da pagina $docIdCounter
 	map<string, string>::iterator it = links.begin();
 	for(;it != links.end(); it++){
 		analyzer.analyze(it->second);
 		map<string, int> terms = analyzer.getTermFreqs();
 
-		//Guardar link e quantidade de termos
-		LinkTerm lt(it->first, terms.size());
-		linksFile->write(lt);
-
-		//Guardar frequencias dos termos
+		//Guardar link e termos
+		linksStream << it->first << endl;
+		termsStream << terms.size() << endl;
 		map<string, int>::iterator anchorTerm = terms.begin();
-		for(; anchorTerm != terms.end(); anchorTerm++){
-			int termId = vocabulary.addTerm(anchorTerm->first);
-			TermFreq tf(termId, anchorTerm->second);
-			anchorFile->write(tf);
+		for(; anchorTerm != terms.end(); anchorTerm++) {
+			termsStream << anchorTerm->first << " " << anchorTerm->second << endl;
 		}
 	}
 }
@@ -171,6 +162,7 @@ void IndexWriter::maybeFlush(){
 
 void IndexWriter::flush(){
 	if(bufferSize <= 0) return;
+	cout << ">> Flushing buffer of "<< bufferSize <<" occurrences to disk..." << endl;
 
 	int blockNumber = runs.size();
 
@@ -191,135 +183,167 @@ void IndexWriter::flush(){
 }
 
 void IndexWriter::commit() {
-	/** ANCHOR TEXT */
-	anchorFile->rewind();
-	linksFile->rewind();
 
-	cout << "Computing anchor text..." << endl;
-	while(linksFile->hasNext()){
-		LinkTerm lt = linksFile->read();
-		boost::unordered_map<string, int>::iterator url = urls.find(lt.getLink());
+	computeAnchorText();
+
+	flush();
+
+	/* Merge */
+	SequenceFile<Occurrence>* occurrencesSorted = kwaymerge(runs);
+
+	createInvertedFile(occurrencesSorted);
+	occurrencesSorted->deleteFile();
+
+	vocabulary.saveTo(directory + "/" + VOCABULARY_FILE);
+
+	delete [] buffer;
+
+	computeAverageDocLength();
+
+	computePageRank();
+
+	cout << ">> Done." << endl;
+}
+
+void IndexWriter::computeAnchorText(){
+	cout << ">> Computing anchor text..." << endl;
+
+	linksStream.seekg(0, ios::beg);
+	termsStream.seekg(0, ios::beg);
+
+	string link;
+	int termsNumber;
+
+	while(linksStream.good()){
+		getline(linksStream, link);
+		if(link == "" && linksStream.eof()) break;
+
+		boost::unordered_map<string, int>::iterator url = urls.find(link);
 		int docId;
 		if(url == urls.end()){
 			docId = -1; //documento que não existe na coleção
 		}else{
 			docId = url->second;
 		}
+
 		linkIdsFile->write(docId); //Guarda Id na mesma ordem para computação do PageRank
 
-		for(int j=0; j < lt.getTermsNumber(); j++){
-			TermFreq tf = anchorFile->read();
+		termsStream >> termsNumber;
+
+		string term;
+		int frequency;
+
+		for(int j=0; j < termsNumber; j++){
+			termsStream >> term;
+			termsStream >> frequency;
 			if(docId != -1){
-				addOccurrence(tf.getTermId(), docId, tf.getFrequency(), ANCHOR_TEXT);
+				int termId = vocabulary.addTerm(term);
+				addOccurrence(termId, docId, frequency, ANCHOR_TEXT);
 			}
 		}
 	}
+}
 
-
-	/** FLUSH & MERGE */
-	cout << "Finishing index merge..." << endl;
-	flush();
-	SequenceFile<Occurrence>* occurrencesSorted = kwaymerge(runs);
-	createInvertedFile(occurrencesSorted);
-	occurrencesSorted->deleteFile();
-	
-	vocabulary.saveTo(directory + "/vocabulary");
-	documentsFile->close();
-	
-	SequenceFile<double>* avgdoclen = new SequenceFile<double>(directory + "/avgdoclen");
+void IndexWriter::computeAverageDocLength(){
+	cout << ">> Computing average document length... " << endl;
+	SequenceFile<double> avgdoclen(directory + "/" + AVG_DOC_LENGTH_FILE);
 	double average = averageDocLength / docIdCounter;
-	avgdoclen->write(average);
-	avgdoclen->close();
-	delete avgdoclen;
+	avgdoclen.write(average);
+	avgdoclen.close();
 	cout << "Average document length: " << average << endl;
+}
 
-	delete [] buffer;
+void IndexWriter::computePageRank(){
+	cout << ">> Computing PageRank... " << endl;
 
-	/** PAGE RANK **/
-	cout << "Computing PageRank..." << endl;
+	//@@@
+//	ofstream pagerank_temp;
+//	pagerank_temp.open( (directory + "/" + "page_rank.txt").c_str(), ios::out | ios::trunc);
+	//@@@
 
-	double* source = new double[docIdCounter];
-	double* dest = new double[docIdCounter];
+	const double q = 0.15; //constant
+	double* pagerank = new double[docIdCounter];
+	double* aux = new double[docIdCounter];
 	int* outdegrees = new int[docIdCounter];
 
 	outDegreeFile->rewind();
-	outDegreeFile->readBlock(outdegrees, docIdCounter);
+	int qtd = outDegreeFile->readBlock(outdegrees, docIdCounter);
+	assert( qtd == docIdCounter);
 
-	double q = 0.15; //constant
 
-	for(int i=0;i<docIdCounter;i++) {
-		source[i] = 1/docIdCounter;
+	cout << "Inicializando... " << endl;
+	for(int i=0; i<docIdCounter; i++) {
+		pagerank[i] = 1;
 	}
 
-	for(int iteration = 0; iteration < 70; iteration++){
+	cout << "Executatando iterações... " << endl;
+	for(int iteration = 0; iteration < PAGERANK_ITERATIONS; iteration++){
+//		cout << "Iteração " << iteration << endl;
+
 		linkIdsFile->rewind();
 
 		for(int i=0; i<docIdCounter; i++) {
-			dest[i] = 0;
+			aux[i] = 0;
 		}
 
 		for(int docId=0; docId<docIdCounter; docId++) {
-			double rank;
-			if(outdegrees[docId] == 0)
-				rank = 0;
-			else
-				rank = source[docId] / outdegrees[docId];
 
-			int destLinkId[outdegrees[docId]];
-			linkIdsFile->readBlock(destLinkId, outdegrees[docId]);
-			for(int i=0; i < outdegrees[docId]; i++){
-				dest[destLinkId[i]-1] += rank;
+			int outDegreeDoc = outdegrees[docId];
+
+			double rank;
+			if(outDegreeDoc == 0){
+				rank = 0;
+			} else {
+				rank = pagerank[docId] / outDegreeDoc;
+			}
+
+			int destLinkId[outDegreeDoc];
+			int size = linkIdsFile->readBlock(destLinkId, outDegreeDoc);
+			assert(size == outDegreeDoc);
+
+			for(int i=0; i<size; i++){
+				int linkId = destLinkId[i];
+//				if(linkId != -1){
+				if(linkId != -1 && linkId != docId){
+					aux[linkId-1] += rank;
+				}
 			}
 		}
 
-		if(iteration == 69) {
-			documentsFile->reopen();
-//			documentsFile->rewind();
-		}
+//		if(iteration == PAGERANK_ITERATIONS-1) {
+//			documentsFile->reopen();
+//		}
 
 		for(int i=0; i<docIdCounter; i++) {
-			dest[i] = (q / docIdCounter) + (1-q) * dest[i];
+			aux[i] = (q / docIdCounter) + (1-q) * aux[i];
 
 			//@@@
-//			if(iteration == 69){
-//				linksFile->setPosition(i);
-//				LinkTerm lt = linksFile->read();
+//			if(iteration == PAGERANK_ITERATIONS-1){
 //				documentsFile->setPosition(i);
 //				Doc doc = documentsFile->read();
-//				cout << setw(4) << i+1 << " = " << setw(10) << fixed << dest[i] << "\t" << doc.getUrl() << endl;
-//				cout << doc.getTitle() << endl;
+//				cout << setw(4) << i+1 << "  " << fixed << setprecision(10) << aux[i] << "  " << doc.getUrl() << endl;
+//				pagerank_temp << setw(4) << i+1 << "  " << fixed << setprecision(10) << aux[i] << "  " << doc.getUrl() << endl;
 //			}
 			//@@@
 		}
 
-		double* temp = source;
-		source = dest;
-		dest = temp;
+		double* temp = pagerank;
+		pagerank = aux;
+		aux = temp;
 	}
 
 	//Save PageRank
-	pageRankFile->writeBlock(source, docIdCounter);
-	pageRankFile->close();
-//	pageRankFile->rewind();
-//	//@@@
-//	int i=0;
-//	while(pageRankFile->hasNext()){
-//		linksFile->setPosition(i);
-//		LinkTerm lt = linksFile->read();
-//		cout << setw(4) << i+1 << " = " << setw(10) << fixed << pageRankFile->read() << "\t" << lt.getLink() << endl;
-//		i++;
-//	}
-//	//@@@
+	SequenceFile<double> pagerankFile(directory + "/" + PAGERANK_FILE);
+	pagerankFile.writeBlock(pagerank, docIdCounter);
+	pagerankFile.close();
 
-
-	delete [] source;
-	delete [] dest;
+	delete [] pagerank;
+	delete [] aux;
 	delete [] outdegrees;
-
-	cout << "Done." << endl;
 }
 
 SequenceFile<Occurrence>* IndexWriter::kwaymerge(vector<SequenceFile<Occurrence>*>& runs){
+	cout << ">> Finishing index merge..." << endl;
 	cout << "Merging "<< runs.size() <<" runs into " << directory + "/mergedfile" << endl;
 
 	if(runs.size() == 1){
@@ -358,6 +382,8 @@ SequenceFile<Occurrence>* IndexWriter::kwaymerge(vector<SequenceFile<Occurrence>
 		}
 
 		int index = run_index[top];
+		run_index.erase(top);
+
 		if(runs[index]->hasNext()){
 			Occurrence head = runs[index]->read();
 			heap.push(head);
@@ -456,8 +482,9 @@ void IndexWriter::merge2runs(SequenceFile<Occurrence>* runA,
 }
 
 SequenceFile<Pair>* IndexWriter::createInvertedFile(SequenceFile<Occurrence>* of){
-	cout << "Creating final index file..." << endl;
-	SequenceFile<Pair>* index = new SequenceFile<Pair>(directory + "/index");
+	cout << ">> Building inverted index..." << endl;
+
+	SequenceFile<Pair>* index = new SequenceFile<Pair>(directory + "/" + INDEX_FILE);
 
 	of->reopen();
 	BufferedFile<Occurrence> bufferedFile(of, buffer, runSize);

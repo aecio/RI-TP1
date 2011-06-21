@@ -19,8 +19,6 @@
 #include "index/Vocabulary.h"
 #include "index/Pair.h"
 #include "index/Doc.h"
-#include "index/TermFreq.h"
-#include "index/LinkTerm.h"
 #include "util/SequenceFile.h"
 #include "util/Page.h"
 #include "textanalysis/Analyzer.h"
@@ -43,16 +41,16 @@ class IndexWriter {
 	Analyzer analyzer;
 
 	vector<SequenceFile<Occurrence>* > runs;
+
 	SequenceFile<Doc>* documentsFile;
 	SequenceFile<int>* docLenghtFile;
-
 	SequenceFile<int>* outDegreeFile;
-	SequenceFile<LinkTerm>* linksFile;
 	SequenceFile<int>* linkIdsFile;
-	SequenceFile<double>* pageRankFile;
-	SequenceFile<TermFreq>* anchorFile;
 
-	 boost::unordered_map<string, int> urls;
+	fstream linksStream;
+	fstream termsStream;
+
+	boost::unordered_map<string, int> urls;
 
 public:
 
@@ -66,6 +64,9 @@ public:
 	void maybeFlush();
 	void flush();
 	void commit();
+	void computePageRank();
+	void computeAverageDocLength();
+	void computeAnchorText();
 
 	SequenceFile<Occurrence>* kwaymerge(vector<SequenceFile<Occurrence>*>&);
 

@@ -9,7 +9,7 @@
 #define VOCABULARY_H_
 
 #include <algorithm>
-#include <map>
+#include <boost/unordered_map.hpp>
 #include <string>
 #include <vector>
 #include "index/Term.h"
@@ -20,7 +20,7 @@ using namespace std;
 
 class Vocabulary {
 	
-	map<string, int> vocabulary;
+	boost::unordered_map<string, int> vocabulary;
 	vector<Term> terms;
 	
 public:
@@ -37,7 +37,7 @@ public:
 	}
 	
 	int addTerm(string termStr){
-		map<string, int>::iterator it = vocabulary.find(termStr);
+		boost::unordered_map<string, int>::iterator it = vocabulary.find(termStr);
 		if(it == vocabulary.end() ){
 			//se não encontrou, adicionar no vector e no map
 			Term term(termStr);
@@ -54,7 +54,7 @@ public:
 	}
 	
 	Term* findTerm(string termStr){
-		map<string, int>::iterator it = vocabulary.find(termStr);
+		boost::unordered_map<string, int>::iterator it = vocabulary.find(termStr);
 		if(it == vocabulary.end() ){
 			return NULL;
 		} else {
@@ -90,6 +90,35 @@ public:
 			sf.write(*it);
 		}
 		sf.close();
+
+		saveVocabularyTxt(fileName);
+	}
+
+	void saveVocabularyTxt(string fileName){
+		ofstream termsStream( (fileName+".debug.txt").c_str(), ios::in | ios::out | ios::trunc);
+		vector<Term>::iterator it = terms.begin();
+		for(; it != terms.end(); it++){
+			Term term = *it;
+
+			termsStream << term.getTerm() << " ";
+			termsStream << "url: " << term.getFieldFrequency(URL) << " ";
+			termsStream << "title: " << term.getFieldFrequency(TITLE) << " ";
+			termsStream << "content: " << term.getFieldFrequency(CONTENT) << " ";
+			termsStream << "anchor: " << term.getFieldFrequency(ANCHOR_TEXT) << " ";
+			termsStream << "key: " << term.getFieldFrequency(KEYWORDS) << " ";
+			termsStream << "desc: " << term.getFieldFrequency(DESCRIPTION) << " ";
+			termsStream << "(frequency)" << endl;
+
+			termsStream << term.getTerm() << " ";
+			termsStream << "url: " << term.getFieldListPosition(URL) << " ";
+			termsStream << "title: " << term.getFieldListPosition(TITLE) << " ";
+			termsStream << "content: " << term.getFieldListPosition(CONTENT) << " ";
+			termsStream << "anchor: " << term.getFieldListPosition(ANCHOR_TEXT) << " ";
+			termsStream << "key: " << term.getFieldListPosition(KEYWORDS) << " ";
+			termsStream << "desc: " << term.getFieldListPosition(DESCRIPTION) << " ";
+			termsStream << "(position)" << endl;
+		}
+		termsStream.close();
 	}
 		
 };

@@ -29,6 +29,7 @@ public:
 		TextTokenizer tokenizer(text);
 		while(tokenizer.hasNext()){ 			//para cada termo "indexável"
 			string t = tokenizer.nextToken();
+			if(t == "") continue;
 			terms[t]++; 						//contabilizar frequencia do termo neste doc
 			length++;
 		}

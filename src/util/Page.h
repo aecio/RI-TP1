@@ -90,6 +90,8 @@ class Page {
 							if(!it->isTag()) anchor_text += it->text();
 						}
 						links[HTML::convert_link(attrib.second, url)] = anchor_text;
+						text += " ";
+						text += anchor_text;
 					}
 				}
 			}

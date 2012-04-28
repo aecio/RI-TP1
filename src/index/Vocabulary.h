@@ -9,7 +9,7 @@
 #define VOCABULARY_H_
 
 #include <algorithm>
-#include <boost/unordered_map.hpp>
+#include <tr1/unordered_map>
 #include <string>
 #include <vector>
 #include "index/Term.h"
@@ -17,10 +17,11 @@
 #include "util/SequenceFile.h"
 
 using namespace std;
+using std::tr1::unordered_map;
 
 class Vocabulary {
 	
-	boost::unordered_map<string, int> vocabulary;
+    unordered_map<string, int> vocabulary;
 	vector<Term> terms;
 	
 public:
@@ -37,7 +38,7 @@ public:
 	}
 	
 	int addTerm(string termStr){
-		boost::unordered_map<string, int>::iterator it = vocabulary.find(termStr);
+        unordered_map<string, int>::iterator it = vocabulary.find(termStr);
 		if(it == vocabulary.end() ){
 			//se não encontrou, adicionar no vector e no map
 			Term term(termStr);
@@ -54,7 +55,7 @@ public:
 	}
 	
 	Term* findTerm(string termStr){
-		boost::unordered_map<string, int>::iterator it = vocabulary.find(termStr);
+        unordered_map<string, int>::iterator it = vocabulary.find(termStr);
 		if(it == vocabulary.end() ){
 			return NULL;
 		} else {

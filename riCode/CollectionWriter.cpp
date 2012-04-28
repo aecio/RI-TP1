@@ -259,7 +259,7 @@ void CollectionWriter::appendDocument(const Document & document,
 
 	stringstream tmpOutFile;
 	tmpOutFile << outputPrefixFileName_ << outputContentIndex_;
-	fprintf(outputIndexFilePtr_, "%s %s %u %u %u\n",
+    fprintf(outputIndexFilePtr_, "%s %s %lu %lu %lu\n",
 					document.getURL().c_str(),
 					tmpOutFile.str().c_str(),
 					outputCurrentOffset_,

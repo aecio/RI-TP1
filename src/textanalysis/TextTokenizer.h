@@ -16,7 +16,7 @@ using namespace std;
 
 class TextTokenizer {
 
-	static Stopwords* stopfile;
+    static Stopwords stopfile;
 
 	string text;
 	unsigned int tokenStart;

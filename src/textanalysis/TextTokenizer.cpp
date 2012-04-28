@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Stopwords* TextTokenizer::stopfile = new Stopwords("stopwords");
+Stopwords TextTokenizer::stopfile("stopwords");
 
 TextTokenizer::TextTokenizer(string& text_){
 	text = text_;
@@ -57,17 +57,14 @@ string TextTokenizer::nextToken(){
 			} while( isAlphaNum(ch) || isSpecialChar(ch) );
 			
 			token = text.substr(tokenStart, currentChar-tokenStart);
-//			cout << token << endl;
-			removeAccents(token);
-//			cout << token << endl;
-			if(stopfile->isStopword(token))
+            removeAccents(token);
+            if(stopfile.isStopword(token))
 				continue;
 			else
 				break;
 		}
 		
 	}
-//	cout << token << endl;
 	return token;
 }
 
@@ -102,18 +99,18 @@ void TextTokenizer::removeAccents(string &str) {
 			//ù, ú, û, ü
 			} else if ((c >= 0xb9 && c <= 0xbc)){
 							str[i]='u';
-		   //Se nao for espaco
+            //Se nao for espaco
 			}
-//			else if(c!=0x20){
-//				 unsigned int x;
-//				 x=str[i];
-//				 if((x>=4294967265)&&(x<=4294967270)){ str[i]='a';}else
-//				 if((x>=4294967272)&&(x<=4294967275)){ str[i]='e';}else
-//				 if((x>=4294967276)&&(x<=4294967279)) {str[i]='i';}else
-//				 if(((x>=4294967282)&&(x<=4294967287))||(x==4294967280)){ str[i]='o';}else
-//				 if(x==4294967281){ str[i]='n';}else
-//				 if((x>=4294967289)&&(x<=4294967292)) {str[i]='u';}else
-//				 if(x==4294967271){ str[i]='c';}else{str.replace (i,1," ");}
-//			}
+            else if(c!=0x20){
+                 unsigned int x;
+                 x=str[i];
+                 if((x>=4294967265)&&(x<=4294967270)){ str[i]='a';}else
+                 if((x>=4294967272)&&(x<=4294967275)){ str[i]='e';}else
+                 if((x>=4294967276)&&(x<=4294967279)) {str[i]='i';}else
+                 if(((x>=4294967282)&&(x<=4294967287))||(x==4294967280)){ str[i]='o';}else
+                 if(x==4294967281){ str[i]='n';}else
+                 if((x>=4294967289)&&(x<=4294967292)) {str[i]='u';}else
+                 if(x==4294967271){ str[i]='c';}else{str.replace (i,1," ");}
+            }
 	}
 }

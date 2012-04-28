@@ -32,6 +32,7 @@
 #define PAGERANK_ITERATIONS 70
 
 using namespace std;
+using std::tr1::unordered_map;
 	
 IndexWriter::IndexWriter(string directory_, int runSize_){
 	runSize = runSize_;	
@@ -218,7 +219,7 @@ void IndexWriter::computeAnchorText(){
 		getline(linksStream, link);
 		if(link == "" && linksStream.eof()) break;
 
-		boost::unordered_map<string, int>::iterator url = urls.find(link);
+        unordered_map<string, int>::iterator url = urls.find(link);
 		int docId;
 		if(url == urls.end()){
 			docId = -1; //documento que não existe na coleção

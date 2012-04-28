@@ -12,17 +12,18 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <set>
+#include <tr1/unordered_set>
 
 using namespace std;
+using std::tr1::unordered_set;
 
 class Stopwords {
 	string file;
-	set<string> stopwords;
+    unordered_set<string> stopwords;
 public:
 	Stopwords(string);
 
-	set<string> list();
+    unordered_set<string> list();
 	bool isStopword(string);
 };
 
